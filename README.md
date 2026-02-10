@@ -1,34 +1,35 @@
 # smkextract
 
-This utility facilitates filtering and processing emission inventory files (FF10 format) from existing EPA's Emission Modeling Platform (EMP) to match a target modeling grid, intersecting counties, or specific column values.
+This utility facilitates filtering and processing emission inventory files (FF10 format) from variable sources (e.g. EPA's Emission Modeling Platform) to match a target modeling grid, intersecting counties, specific column values, or geographic identifiers.
 
-The toolkit comprises five component python scripts:
+The toolkit comprises two component python scripts:
 1. `build_sector_config.py`: Automates configuration setup by parsing EMP run scripts.
-2. `smkxtgrid.py`: Filters inventory files based on a modeling grid (GRIDDESC) and county intersection.
-3. `smkxtgis.py`: Filters inventory files based on intersection with a custom shapefile/domain.
-4. `smkxtcol.py`: Filters inventory files based on specific column values or ranges.
-5. `griddesc2shp.py`: Converts GRIDDESC files to shapefiles/GeoPackages for visualization.
+2. `smkextract.py`: The consolidated extractor tool that filters inventories based on Grid, Shapefile, FIPS/State/County, or Column values.
 
 # Setup Instructions
 
-These scripts require Python 3 and several geospatial and data processing libraries. It is recommended to use a Conda environment.
+These scripts require Python 3 and several libraries. An installation script is provided to set up a local virtual environment and configure the scripts for execution.
 
-## 1. Create and Activate Conda Environment
+## Installation
 
-```sh
-conda create -n smkextract python=3.9
-conda activate smkextract
-```
-
-## 2. Install Dependencies
-
-Install the required packages (`geopandas`, `shapely`, `pyproj`, `pandas`) using `conda-forge`:
+Run the provided `install.sh` script. This will:
+1. Create a local python virtual environment (`.venv`) in the script directory.
+2. Install necessary dependencies (`geopandas`, `shapely`, `pyproj`, `pandas`, `pyyaml`).
+3. Update the python scripts (`smkextract.py`, etc.) to use this environment directly.
+4. Make the scripts executable.
 
 ```sh
-conda install -c conda-forge geopandas shapely pyproj pandas
+./install.sh
 ```
 
-*Note: Standard Python libraries used include `argparse`, `json`, `os`, `re`, `sys`, `csv`, `warnings`.*
+## Usage
+
+After installation, you can run the tool components directly from the command line:
+
+```sh
+./smkextract.py --help
+./build_sector_config.py --help
+```
 
 ---
 
@@ -36,178 +37,73 @@ conda install -c conda-forge geopandas shapely pyproj pandas
 
 ## Overview
 
-`build_sector_config.py` is a utility script designed to automate the population of sector entries in a configuration JSON file for `smkxtgrid.py` (by default `smkxtgrid.json`) or other extraction scripts. It parses a set of EMP run scripts to extract sector names and emission inventory file references, then updates the configuration file accordingly. This helps streamline the setup and management of emission sector data for large-scale air quality modeling projects.
+`build_sector_config.py` is a utility script designed to automate the population of sector entries in the `smkextract.yaml` configuration file. It parses a set of EMP run scripts to extract sector names and emission inventory file references, then updates the configuration file accordingly. This helps streamline the setup and management of emission sector data.
 
-`build_sector_config.py` requires a manifest of EMP runscripts in form of JSON (e.g., `emp_runscripts.json`) and a target JSON configuration input file that it will make update to (e.g., `smkxtgrid.json`). In a nutshell, `build_sector_config.py` read each EMP runscript to extract the `SECTOR` variable and all emission inventory file paths defined by variables like `EMISINV_*`, `EMISDAY_*`, or `EMISHOUR_*`, and then update the target configuration with list of found emission inventory files for each found sector accordingly.
+It reads a manifest of runscripts (default: `emp_runscripts.yaml`) and updates the `sector` section of the target configuration (default: `smkextract.yaml`). It handles variable resolution (e.g., `${CASEINPUTS}`) to ensure absolute paths are captured.
 
 ## Usage
 
 ```sh
-python build_sector_config.py [--runscripts <path/to/emp_runscripts.json>] [--config <path/to/smkxtgrid.json>]
+./build_sector_config.py [--runscripts <path/to/emp_runscripts.yaml>] [--config <path/to/smkextract.yaml>]
 ```
 
-- `--runscripts`: Path to the manifest JSON file listing run scripts (default: `emp_runscripts.json` in the script directory).
-- `--config`: Path to the configuration JSON file to update (default: `smkxtgrid.json` in the script directory).
+- `--runscripts`: Path to the manifest YAML file listing run scripts (default: `emp_runscripts.yaml`).
+- `--config`: Path to the configuration YAML file to update (default: `smkextract.yaml`).
 
 ## Example
 
-To update `smkxtgrid.json` using the default manifest:
-
 ```sh
-python build_sector_config.py
+./build_sector_config.py
 ```
 
-To specify custom paths:
+---
 
-```sh
-python build_sector_config.py --runscripts /path/to/emp_runscripts.json --config /path/to/smkxtgrid.json
-```
-
-# B. smkxtgrid.py
+# B. smkextract.py
 
 ## Overview
 
-`smkxtgrid.py` is the main script for filtering and processing emission inventory files (FF10 format) to match a target modeling grid and intersecting counties using a GRIDDESC file.
+`smkextract.py` is the consolidated utility for filtering emission inventory files (FF10 format). It replaces the legacy `smkxtgrid`, `smkxtgis`, and `smkxtcol` scripts. It supports multiple filtering methods simultaneously and allows for both **extraction** (keeping matches) and **exclusion** (removing matches).
 
 ## Features
 
-- **Grid and County Intersection:** Reads a grid description file (GRIDDESC) and a county shapefile to determine which counties intersect the modeling domain.
-- **FF10 Filtering:** Filters FF10 emission inventory files to include only records for counties intersecting the grid.
-- **Flexible Configuration:** Uses a JSON configuration file (`smkxtgrid.json`) to specify input/output directories, grid, shapefile, and sector-to-file mappings.
-- **Batch Processing:** Processes all sectors and files listed in the configuration, with support for skipping specified sectors.
-- **Output:** Writes filtered FF10 files to the specified output directory, appending the grid ID to filenames.
+- **Unified Configuration**: Uses `smkextract.yaml` for all settings.
+- **Multiple Filter Types**:
+    - **Grid:** Filter by intersection with a modeling grid (requires `GRIDDESC`).
+    - **Shapefile (GIS):** Filter by intersection with a custom polygon (e.g., basin, region).
+    - **FIPS/State/County:** Filter by 6-digit FIPS, State Abbreviation, or County Name (using `COSTCY` lookup).
+    - **Column:** Filter by values or ranges in specific columns (e.g., `SCC`, `poll`).
+- **Flexible Modes**: Global and per-filter supports `extraction` (keep) or `exclusion` (drop).
+- **Format Support**: Automatically detects various FF10 header formats (Point, Nonpoint, Onroad, etc.).
 
 ## Usage
 
 ```sh
-python smkxtgrid.py --config <path/to/smkxtgrid.json>
+./smkextract.py --config <path/to/smkextract.yaml>
 ```
 
-- `--config`: Path to the configuration JSON file (default: `smkxtgrid.json` in the script directory).
+- `--config`: Path to the configuration YAML file (default: looks for `smkextract.yaml` in script dir).
 
-## Example
+## Configuration (`smkextract.yaml`)
 
-To filter all inventories for a grid and county set defined in `smkxtgrid.json`:
+The configuration file controls all aspects of the extraction. Key sections:
 
-```sh
-python smkxtgrid.py --config smkxtgrid.json
+- **Path Settings**: `outputs` directory.
+- **Process Control**: `filter_sector` (list or 'all'), `filter_mode` (extraction/exclusion).
+- **Geographic Filters**: `filter_fips`, `filter_states`, `filter_counties` (requires `costcy_file`).
+- **Spatial Filters**: `filter_grid` (requires `griddesc_path`, `county_shp`) or `filter_shp` (requires `county_shp`).
+- **Column Filters**: `filter_cols` list.
+- **Sectors**: Mapping of sector names to input files (populated by `build_sector_config.py` or manually).
+
+Example snippet:
+```yaml
+filter_mode: extraction
+filter_states: ['NC', 'VA']
+filter_cols:
+  - col_name: poll
+    filtered_val: ["NOX"]
 ```
 
-# C. smkxtgis.py
+---
 
-## Overview
-
-`smkxtgis.py` filters FF10 emission inventory files based on their geographical intersection with a user-provided input shapefile (domain), rather than a GRIDDESC file. This is useful for analyzing emissions within a specific custom region (e.g., a basin, a state subset, or a custom polygon).
-
-## Features
-
-- **Spatial Intersection:** Determines intersecting counties based on a custom input shapefile (e.g., `PermianBasin_Extent.shp`) and a county boundary shapefile.
-- **FF10 Filtering:** Filters inventory records to retain only those valid for the intersecting counties.
-- **Configurable Inputs:** Uses a JSON configuration file to manage multiple sectors and files.
-
-## Usage
-
-```sh
-python smkxtgis.py --config <path/to/smkxtgis.json>
-```
-
-- `--config`: Path to the configuration JSON file (default: `smkxtgis.json`).
-
-## Configuration (`smkxtgis.json`)
-
-The configuration file requires the following keys:
-- `inputs`: Base directory for input files.
-- `outputs`: Directory where filtered files will be saved.
-- `county_shp`: Path to the US county shapefile (e.g., `.gpkg` or `.shp`).
-- `input_shp`: Path to the domain shapefile defining the area of interest.
-- `sector`: Dictionary mapping sector names to lists of filenames.
-- `sector_skip`: (Optional) List of sectors to skip.
-
-## Example
-
-```sh
-python smkxtgis.py --config smkxtgis.json
-```
-
-# D. smkxtcol.py
-
-## Overview
-
-`smkxtcol.py` is a general-purpose utility for filtering FF10 emission files based on specific column values or value ranges. This is useful for extracting data for specific facility IDs, SCCs, or regions without needing a spatial file.
-
-## Features
-
-- **Column-Based Filtering:** Filter rows where a specified column matches a list of values (`filtered_val`) or falls within a range (`start_val` to `end_val`).
-- **Structure Preservation:** Retains original file headers and comments.
-- **Flexible Data Handling:** Supports various FF10 formats by dynamically detecting headers and processing rows.
-
-## Usage
-
-```sh
-python smkxtcol.py --config <path/to/smkxtcol.json>
-```
-
-- `--config`: Path to the configuration JSON file (default: `smkxtcol.json`).
-
-## Configuration (`smkxtcol.json`)
-
-Required keys:
-- `inputs`: Directory for input files.
-- `outputs`: Directory for output files.
-- `sector` or `files`: List of files to process.
-- `filter_col`: The name of the column to apply the filter on (e.g., `region_cd`).
-- `filtered_val`: (Optional) A list of exact values to keep.
-- `start_val` / `end_val`: (Optional) A range of values to keep.
-
-## Example
-
-To filter files for specific NY counties (FIPS starting with 36...):
-
-```sh
-python smkxtcol.py --config smkxtcol.json
-```
-
-# E. griddesc2shp.py
-
-## Overview
-
-`griddesc2shp.py` is a utility script for converting a SMOKE/CMAQ GRIDDESC file into a GeoPackage (.gpkg) polygon layer, either as a full grid (one polygon per cell) or as a single extent polygon. It is useful for visualizing or spatially analyzing the modeling domain and for generating shapefiles compatible with GIS tools.
-
-## Features
-
-- **GRIDDESC Parsing:** Reads SMOKE/CMAQ GRIDDESC files, supporting both coordinate and grid definition sections.
-- **Flexible Output:** Generates either a full grid (with row/column attributes) or a single extent polygon.
-- **Projection Handling:** Converts cell coordinates from native Lambert Conformal Conic (LCC) projection to WGS84 lon/lat.
-- **Customizable Output:** Allows user to specify output file, layer name, and whether to include cell center attributes.
-- **Command-Line Interface:** Supports a variety of CLI options for input, output, and processing mode.
-
-## Usage
-
-```
-python griddesc2shp.py -g <path/to/GRIDDESC.txt> -i <GRID_ID> [options]
-```
-
-**Key options:**
-- `-g/--griddesc`: Path to the GRIDDESC file (required)
-- `-i/--grid-id`: Grid/domain name/ID to extract (required)
-- `-o/--output`: Output GeoPackage file path (optional)
-- `--layer-name`: Layer name inside GeoPackage (optional)
-- `--extent-only`: Output only a single extent polygon (flag)
-- `--no-centers`: Skip center coordinate attributes (flag)
-
-## Example
-
-To create a full grid GeoPackage for grid `12LISTOS`:
-
-```sh
-python griddesc2shp.py -g griddesc.txt -i 12LISTOS
-```
-
-To create a single extent polygon:
-
-```sh
-python griddesc2shp.py -g griddesc.txt -i 12LISTOS --extent-only
-```
-
-# F. Author
+# C. Author
 Huy Tran: tranhuy@email.unc.edu

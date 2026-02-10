@@ -1,4 +1,4 @@
-#!/nas/longleaf/home/tranhuy/software/pkg/miniconda3/envs/AERMOD/bin/python
+#!/usr/bin/env python3
 
 import argparse
 import os

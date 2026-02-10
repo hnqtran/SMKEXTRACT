@@ -1,4 +1,4 @@
-#!/nas/longleaf/home/tranhuy/software/pkg/miniconda3/envs/AERMOD/bin/python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -239,7 +239,8 @@ def parse_costcy(path):
     in_county = False
     
     # Example line: " AL           Autauga Co 0 1  1        CST ..."
-    county_pattern = re.compile(r'^\s*([A-Z0-9]{2})\s+(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+([A-Z]{3,4})')
+    # Modified to capture numeric parts as blob to handle '0 1 1' vs '053 1' formats
+    county_pattern = re.compile(r'^\s*([A-Z0-9]{2})\s+(.*?)\s+([0-9\s]+)\s+([A-Z]{3,4})')
     
     with open(path, 'r', encoding='latin-1') as f:
         for line in f:
@@ -253,8 +254,27 @@ def parse_costcy(path):
             
             match = county_pattern.match(line)
             if match:
-                st_abbr, name, country, st_fips, co_fips, tz = match.groups()
-                fips6 = f"{int(country)}{int(st_fips):02d}{int(co_fips):03d}"
+                st_abbr, name, num_blob, tz = match.groups()
+                parts = num_blob.split()
+                
+                if len(parts) == 3:
+                     country, st_fips, co_fips = parts
+                elif len(parts) == 2:
+                     # Merged CountryState (e.g. 053 or 010) + County
+                     combined, co_fips = parts
+                     if len(combined) > 1:
+                         country = combined[0]
+                         st_fips = combined[1:]
+                     else:
+                         continue 
+                else:
+                     continue
+
+                try:
+                    fips6 = f"{int(country)}{int(st_fips):02d}{int(co_fips):03d}"
+                except ValueError:
+                    continue
+
                 name = name.strip()
                 
                 entry = {
@@ -336,23 +356,42 @@ if __name__ == "__main__":
     os.makedirs(outputs_root, exist_ok=True)
     active_filters = []
     
-    # COSTCY Loading if needed (Only if using State or County Name filters)
+    # Check for generic FIPS in filter_fips (ending in 000) to trigger expansion
+    raw_fips = config.get('filter_fips', [])
+    if raw_fips is None: raw_fips = []
+    if not isinstance(raw_fips, list): 
+        raw_fips = [str(raw_fips)]
+    else: 
+        raw_fips = [str(f) for f in raw_fips]
+    
+    use_fips_expansion = any(f.endswith('000') for f in raw_fips)
+    
+    # COSTCY Loading if needed (Only if using State, County Name filters, or Generic FIPS)
     costcy_data = None
     use_states = config.get('filter_states') and len(config.get('filter_states')) > 0
     use_counties = config.get('filter_counties') and len(config.get('filter_counties')) > 0
     
-    if (use_states or use_counties) and config.get('costcy_file'):
+    if (use_states or use_counties or use_fips_expansion) and config.get('costcy_file'):
         print(f"Loading COSTCY from {config['costcy_file']}...")
         costcy_data = parse_costcy(config['costcy_file'])
-    elif (use_states or use_counties) and not config.get('costcy_file'):
-        print("Warning: State or County filtering requested but 'costcy_file' is missing.")
+    elif (use_states or use_counties or use_fips_expansion) and not config.get('costcy_file'):
+        print("Warning: COSTCY file missing but required for State/County/Generic-FIPS filtering.")
 
-    # 1. Direct FIPS Filter
+    # 1. Direct FIPS Filter (with expansion)
     fips_to_filter = []
-    if config.get('filter_fips'):
-        vals = config.get('filter_fips')
-        if not isinstance(vals, list): vals = [vals]
-        fips_to_filter.extend([str(v) for v in vals])
+    for f in raw_fips:
+        # Check for generic state FIPS (e.g. '053000')
+        if f.endswith('000') and len(f) == 6 and costcy_data:
+            state_prefix = f[:3]
+            expanded = [k for k in costcy_data['fips'].keys() if k.startswith(state_prefix)]
+            if expanded:
+                fips_to_filter.extend(expanded)
+                print(f"Expanded generic FIPS {f} to {len(expanded)} counties.")
+            else:
+                fips_to_filter.append(f)
+                print(f"Warning: Generic FIPS {f} found no matches in COSTCY.")
+        else:
+             fips_to_filter.append(f)
 
     # 2. State Filter (Lookup in COSTCY)
     if config.get('filter_states') and costcy_data:
