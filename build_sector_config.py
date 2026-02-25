@@ -66,15 +66,29 @@ def parse_run_script(script_path, inputs_root=None):
     # Ensure absolute paths and uniqueness
     unique_abs_paths = []
     for path in inventory_paths:
-        # If it's still got unresolved variables (like $INSTALL_DIR), we can't make it absolute.
-        # But we'll try to find it relative to current dir as a fallback.
-        if '$' in path:
-            # Try to expand what remains from the OS environment
-            path = os.path.expandvars(path)
+        abs_p = os.path.abspath(os.path.expandvars(path))
+        
+        # Path re-anchoring: if file doesn't exist locally, try to find it under inputs_root
+        if not os.path.exists(abs_p) and inputs_root and os.path.isdir(inputs_root):
+            # Strategy 1: Match relative structure after 'inputs' folder
+            parts = abs_p.split(os.sep)
+            if 'inputs' in parts:
+                idx = parts.index('inputs')
+                rel_parts = parts[idx+1:]
+                attempt = os.path.normpath(os.path.join(inputs_root, *rel_parts))
+                if os.path.exists(attempt):
+                    abs_p = attempt
             
-        abs_path = os.path.abspath(path)
-        if abs_path not in unique_abs_paths:
-            unique_abs_paths.append(abs_path)
+            # Strategy 2: Deep search if still not found
+            if not os.path.exists(abs_p):
+                base = os.path.basename(abs_p)
+                for root, _, files in os.walk(inputs_root):
+                    if base in files:
+                        abs_p = os.path.join(root, base)
+                        break
+        
+        if abs_p not in unique_abs_paths:
+            unique_abs_paths.append(abs_p)
             
     return sector, unique_abs_paths
 
@@ -130,16 +144,37 @@ def update_config(config_path, sector, filenames):
             for i in range(marker_line_idx + 1):
                 f.write(lines[i])
             
-            # Dump the sector dictionary
-            # PyYAML's dump of a dict includes the key.
-            # We want to format it nicely.
+            # Dump the sector dictionary and add inline comments
             sector_yaml = yaml.dump({'sector': sector_mapping}, default_flow_style=False, sort_keys=False)
-            f.write(sector_yaml)
+            yaml_lines = sector_yaml.splitlines()
+            final_yaml_lines = []
+            for line in yaml_lines:
+                sline = line.strip()
+                # If it looks like a list item with a path
+                if sline.startswith('- ') and ('/' in sline or sline.endswith('.csv')):
+                    path = sline[2:].strip().strip("'").strip('"')
+                    if os.path.exists(path):
+                        line += " # Valid"
+                    else:
+                        line += " # Missing"
+                final_yaml_lines.append(line)
+            f.write("\n".join(final_yaml_lines) + "\n")
     else:
         # Fallback to full dump if marker is missing
         with open(config_path, 'w') as f:
-            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
-            f.write('\n')
+            content = yaml.dump(data, default_flow_style=False, sort_keys=False)
+            yaml_lines = content.splitlines()
+            final_yaml_lines = []
+            for line in yaml_lines:
+                sline = line.strip()
+                if sline.startswith('- ') and ('/' in sline or sline.endswith('.csv')):
+                    path = sline[2:].strip().strip("'").strip('"')
+                    if os.path.exists(path):
+                        line += " # Valid"
+                    else:
+                        line += " # Missing"
+                final_yaml_lines.append(line)
+            f.write("\n".join(final_yaml_lines) + "\n")
 
 def load_runscripts(yaml_path):
     if not os.path.isfile(yaml_path):
@@ -149,6 +184,35 @@ def load_runscripts(yaml_path):
     if not isinstance(data, dict):
         raise TypeError("Runscript manifest must be a YAML object mapping groups to lists of scripts.")
     return data
+
+def get_script_vars(script_path, initial_vars=None):
+    """
+    Parses a SMOKE .csh script to extract setenv variables.
+    """
+    script_vars = dict(initial_vars) if initial_vars else {}
+    if not os.path.isfile(script_path):
+        return script_vars
+        
+    with open(script_path, 'r') as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith('#'):
+                continue
+            match = SETENV_PATTERN.match(line)
+            if match:
+                key, value = match.groups()
+                key = key.strip()
+                value = value.strip()
+                
+                resolved_value = value
+                for _ in range(3):
+                    start_val = resolved_value
+                    for v_name, v_val in script_vars.items():
+                        resolved_value = resolved_value.replace(f"${v_name}", str(v_val)).replace(f"${{{v_name}}}", str(v_val))
+                    if start_val == resolved_value:
+                        break
+                script_vars[key] = resolved_value
+    return script_vars
 
 def main():
     parser = argparse.ArgumentParser(description='Populate smkextract.yaml sector entries from run scripts.')
@@ -161,16 +225,39 @@ def main():
     args = parser.parse_args()
     
     try:
-        # Get inputs_root from config for variable resolution
-        with open(args.config, 'r') as f:
-            temp_config = yaml.safe_load(f) or {}
-        inputs_root = temp_config.get('inputs')
-
         manifest = load_runscripts(args.runscripts)
-        updates = 0
         manifest_dir = os.path.dirname(os.path.abspath(args.runscripts))
+
+        # 1. Get initial inputs_root from config
+        inputs_root = None
+        if os.path.exists(args.config):
+            with open(args.config, 'r') as f:
+                temp_config = yaml.safe_load(f) or {}
+            inputs_root = temp_config.get('inputs')
+
+        # 2. Check for directory_definitions in manifest
+        global_vars = {}
+        dir_defs_path = manifest.get('directory_definitions')
+        if dir_defs_path:
+            if not os.path.isabs(dir_defs_path):
+                dir_defs_path = os.path.normpath(os.path.join(manifest_dir, dir_defs_path))
+            print(f"Loading directory definitions from {dir_defs_path}")
+            global_vars = get_script_vars(dir_defs_path)
+            
+            # If CASEINPUTS is found in directory_definitions, it overrides config
+            if 'CASEINPUTS' in global_vars:
+                inputs_root = global_vars['CASEINPUTS']
+            elif 'CASEINPUT' in global_vars:
+                inputs_root = global_vars['CASEINPUT']
         
+        if inputs_root:
+            print(f"Using inputs_root: {inputs_root}")
+
+        updates = 0
         for group, scripts in manifest.items():
+            if group == 'directory_definitions': continue
+            if not isinstance(scripts, list): continue
+
             for script_path in scripts:
                 if not os.path.isabs(script_path):
                     script_path = os.path.normpath(os.path.join(manifest_dir, script_path))

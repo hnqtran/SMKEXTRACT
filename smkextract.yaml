@@ -1,15 +1,15 @@
 # --- Path Settings ---
-outputs: /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/extracted_output # Root directory for extracted output files
+outputs: /proj/ie/proj/SMOKE/htran/12LISTOS/2022he_cb6_22m/inputs # Root directory for extracted output files
 
 # --- Filename Construction Logic ---
 # Final Name = [BaseName] + [filename_append] + [.extension]
 # 1. If filename_prepend is EMPTY:   BaseName = Original filename (e.g. 'rail_data')
 # 2. If filename_prepend is SET:     BaseName = filename_prepend value (e.g. 'v2')
 filename_prepend: "" # String to replace the base filename. If empty, uses original filename.
-filename_append: _extracted # String to append to the end of the base filename.
+filename_append: "" # _extracted # String to append to the end of the base filename.
 
 # --- Process Control ---
-filter_sector: all # List of sector names to process (e.g. ['onroad']), or 'all' to process everything
+filter_sector: [ptfire-rx] # List of sector names to process (e.g. ['onroad']), or 'all' to process everything
 skip_sector: [] # List of sector names to skip (auto-populated after success)
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -41,223 +41,230 @@ county_shp: /proj/ie/proj/staff/tranhuy/python/GIS/tl_2020_us_county.gpkg # Path
 # You can use 'filter_cols' for multiple filters, or legacy 'filter_col' for a single one.
 # Each filter in 'filter_cols' can have its own filter_mode (extraction/exclusion).
 filter_cols: 
-  - col_name: scc # Column to filter on
-    filtered_val: [] # List of values to keep/remove
+  #- col_name: scc # Column to filter on
+    #filtered_val: [] # List of values to keep/remove
     # filter_mode: extraction # Local override (extraction/exclusion)
-  - col_name: poll
-    filtered_val: ["NOX", "CO"]
-    filter_mode: extraction
-
-# --- Legacy Single Column Filter (Backward Compatibility) ---
-filter_col: "" 
-filtered_val: []
-start_val: null 
-end_val: null 
+  #- col_name: poll
+    #filtered_val: []
+    #filter_mode: extraction
 
 # --- Sectors & Files Mapping ---
 sector:
   canada_afdust:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_dust_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_tillage_harvest_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_cattle_12jun2024_nf_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_other_12jun2024_nf_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_poultry_12jun2024_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_dust_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_tillage_harvest_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_cattle_12jun2024_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_other_12jun2024_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_afdust/canada_BAU19_2022interp_I041_area_livestock_poultry_12jun2024_nf_v2.csv
   openburn:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/openburn/openburn_2022hc_proj_2020NEI_NONPOINT_20230222_08apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/openburn/openburn_2022hc_proj_2020NEI_NONPOINT_20230222_08apr2025_nf_v1.csv
   rail:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/rail/2022v1_platform_rail_2022_04jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/rail/2022v1_platform_rail_2022_04jun2024_nf_v1.csv
   canada_onroad:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_onroad/canada_BAU19_2022interp_I041_T3_onroad_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_onroad/canada_BAU19_2022interp_I041_T3_onroad_refueling_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_onroad/canada_BAU19_2022interp_I041_T3_onroad_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_onroad/canada_BAU19_2022interp_I041_T3_onroad_refueling_12jun2024_v0.csv
   nonroad:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/nonroad/nonroad_ff10_2022v2_by2022_MOVES_ROC_AE6_07may2025_nf_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/nonroad/2022proj_from_2020NEI_california_nonroad_for_SMOKE_14oct2024_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/nonroad/nonroad_ff10_2022v2_by2022_MOVES_ROC_AE6_07may2025_nf_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/nonroad/2022proj_from_2020NEI_california_nonroad_for_SMOKE_14oct2024_v1.csv
   afdust:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/afdust/2022hc_proj_afdust_2020NEI_NONPOINT_20230222_24apr2025_nf_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/afdust/2022hc_proj_afdust_2020NEI_NONPOINT_20230222_24apr2025_nf_v3.csv
   nonpt:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/nonpt/2022hc_proj_2020NEI_NONPOINT_20230222_05aug2025_nf_v4.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/nonpt/2022hc_proj_2020NEI_NONPOINT_20230222_05aug2025_nf_v4.csv
   rwc:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/rwc/rwc_2022v2_platform_EPA_09apr2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/rwc/2022hd_from_rwc_2020NEI_NONPOINT_20230222_SLT_05aug2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/rwc/rwc_2022v2_platform_EPA_09apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/rwc/2022hd_from_rwc_2020NEI_NONPOINT_20230222_SLT_05aug2025_nf_v1.csv
   fertilizer:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/fertilizer/2022hc_fertilizer_NH3_monthly_postCMAQ_STAGE_17sep2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/fertilizer/2022hc_fertilizer_NH3_monthly_postCMAQ_STAGE_17sep2024_v0.csv
   np_oilgas:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_oilgas/2022hd_np_oilgas_OGTool_plusPA_29apr2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_oilgas/2022hc_proj_np_oilgas_2020NEI_NONPOINT_20230222_OK_WY_production_03apr2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_oilgas/2022hd_np_oilgas_blowdown_pigging_23apr2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_oilgas/2022hc_np_oilgas_abandoned_wells_all_wHAPs_14jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_oilgas/2022hd_np_oilgas_Colorado_22apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_oilgas/2022hd_np_oilgas_OGTool_plusPA_29apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_oilgas/2022hc_proj_np_oilgas_2020NEI_NONPOINT_20230222_OK_WY_production_03apr2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_oilgas/2022hd_np_oilgas_blowdown_pigging_23apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_oilgas/2022hc_np_oilgas_abandoned_wells_all_wHAPs_14jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_oilgas/2022hd_np_oilgas_Colorado_22apr2025_nf_v1.csv
   livestock:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/livestock/livestock_2022hd_FEM_monthly_31mar2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/livestock/2022hd_proj_nonFEM_livestock_2020NEI_NONPOINT_20230222_monthly_31mar2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/livestock/livestock_2022hd_FEM_daily_31mar2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/livestock/2022hd_proj_nonFEM_livestock_2020NEI_NONPOINT_20230222_daily_31mar2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/livestock/livestock_2022hd_daily_prevdec_31mar2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/livestock/livestock_2022hd_FEM_monthly_31mar2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/livestock/2022hd_proj_nonFEM_livestock_2020NEI_NONPOINT_20230222_monthly_31mar2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/livestock/livestock_2022hd_FEM_daily_31mar2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/livestock/2022hd_proj_nonFEM_livestock_2020NEI_NONPOINT_20230222_daily_31mar2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/livestock/livestock_2022hd_daily_prevdec_31mar2025_v0.csv
   mexico_onroad_cb6orig:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/mexico_onroad/Mexico_2022he_onroad_MOVES_adj2_11aug2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/mexico_onroad/Mexico_2022he_onroad_MOVES_adj2_11aug2025_v0.csv
   canmex_area:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_area_other_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_area_EPG_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_T5_rail_12jun2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_T4_nonroad_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_area_RWC_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/canada_BAU19_2022interp_I041_area_UOG_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/2019ge_proj_CEDS_from_Mexico_2016INEM_nonroad_24apr2025_nf_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/2019ge_proj_CEDS_from_Mexico_2016INEM_nonpoint_24apr2025_nf_v9.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/Mexico_2022_nonroad_20240615_borderstates_28jul2025_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/Mexico_2022_area_20240615_borderstates_15jun2024_nf_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/Mexico_2022v2_nonroad_group2states_28jul2025_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_area/Mexico_2022v2_area_group2states_16apr2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_area_other_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_area_EPG_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_T5_rail_12jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_T4_nonroad_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_area_RWC_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/canada_BAU19_2022interp_I041_area_UOG_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/2019ge_proj_CEDS_from_Mexico_2016INEM_nonroad_24apr2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/2019ge_proj_CEDS_from_Mexico_2016INEM_nonpoint_24apr2025_nf_v9.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/Mexico_2022_nonroad_20240615_borderstates_28jul2025_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/Mexico_2022_area_20240615_borderstates_15jun2024_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/Mexico_2022v2_nonroad_group2states_28jul2025_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_area/Mexico_2022v2_area_group2states_16apr2025_nf_v1.csv
   canmex_ag:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_fertilizer_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_cattle_12jun2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_other_12jun2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_poultry_12jun2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/Mexico_2022_area_20240615_borderstates_15jun2024_nf_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/2019ge_proj_CEDS_from_Mexico_2016INEM_nonpoint_24apr2025_nf_v8.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_ag/Mexico_2022v2_area_group2states_16apr2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_fertilizer_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_cattle_12jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_other_12jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/canada_BAU19_2022interp_I041_area_livestock_poultry_12jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/Mexico_2022_area_20240615_borderstates_15jun2024_nf_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/2019ge_proj_CEDS_from_Mexico_2016INEM_nonpoint_24apr2025_nf_v8.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_ag/Mexico_2022v2_area_group2states_16apr2025_nf_v2.csv
   np_solvents:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_solvents/np_solvents_2022v1_20240221_31mar2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/np_solvents/np_solvents_2022v1_20240221_HAPs_31mar2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_solvents/np_solvents_2022v1_20240221_31mar2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_solvents/np_solvents_2022v1_20240221_HAPs_31mar2025_nf_v2.csv
   onroad_diesel:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_diesel/VMT_2022v2_full_monthly_11apr2025_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_diesel/VMT_2022v2_full_monthly_11apr2025_v3.csv
   onroad:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad/VMT_2022v2_full_monthly_11apr2025_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad/STARTS_2022v2_CONUS_monthly_27may2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad/HOTELING_2022v2_monthly_21may2025_v4.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad/ONI_2022v2_full_monthly_21may2025_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad/VPOP_2022v2_full_21may2025_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad/VMT_2022v2_full_monthly_11apr2025_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad/STARTS_2022v2_CONUS_monthly_27may2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad/HOTELING_2022v2_monthly_21may2025_v4.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad/ONI_2022v2_full_monthly_21may2025_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad/VPOP_2022v2_full_21may2025_v1.csv
   onroad_ca_adj_gas:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj_gas/VMT_2022v2_full_monthly_11apr2025_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj_gas/VMT_2022v2_full_monthly_11apr2025_v2.csv
   onroad_ca_adj:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj/VMT_2022v2_full_monthly_11apr2025_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj/VPOP_2022v2_full_21may2025_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj/ONI_2022v2_full_monthly_21may2025_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj/HOTELING_2022v2_monthly_11apr2025_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj/STARTS_2022v2_CONUS_monthly_27may2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj/VMT_2022v2_full_monthly_11apr2025_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj/VPOP_2022v2_full_21may2025_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj/ONI_2022v2_full_monthly_21may2025_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj/HOTELING_2022v2_monthly_11apr2025_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj/STARTS_2022v2_CONUS_monthly_27may2025_nf_v2.csv
   onroad_ca_adj_diesel:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_ca_adj_diesel/VMT_2022v2_full_monthly_11apr2025_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_ca_adj_diesel/VMT_2022v2_full_monthly_11apr2025_v2.csv
   onroad_gas:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/onroad_gas/VMT_2022v2_full_monthly_11apr2025_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_gas/VMT_2022v2_full_monthly_11apr2025_v3.csv
   canada_og2D:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_og2D/canada_BAU19_2022interp_I041_point_UOG_12jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_og2D/canada_BAU19_2022interp_I041_point_UOG_12jun2024_nf_v1.csv
   ptfire-rx3D:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_flint_hills_fires_2022_beta_ff10_02apr2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_flint_hills_fires_2022_beta_ff10_15mar2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/prevdec_ptday_2022he_ptfire_rx_all_15aug2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_pile_burn_2022v1_08aug2025_nf_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_pile_burn_2022v1_08aug2025_nf_v3
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_pile_burn_2022v2_additional_17jun2025_nf_v2
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_pile_burn_2022v2_additional_17jun2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_flint_hills_fires_2022_beta_ff10_02apr2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_flint_hills_fires_2022_beta_ff10_15mar2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/prevdec_ptday_2022he_ptfire_rx_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_pile_burn_2022v1_08aug2025_nf_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_pile_burn_2022v1_08aug2025_nf_v3
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_pile_burn_2022v2_additional_17jun2025_nf_v2
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_pile_burn_2022v2_additional_17jun2025_nf_v2.csv
   ptfire-rx:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_flint_hills_fires_2022_beta_ff10_02apr2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_flint_hills_fires_2022_beta_ff10_15mar2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/prevdec_ptday_2022he_ptfire_rx_all_15aug2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_pile_burn_2022v1_08aug2025_nf_v3.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_pile_burn_2022v1_08aug2025_nf_v3
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptday_pile_burn_2022v2_additional_17jun2025_nf_v2
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-rx/ptinv_pile_burn_2022v2_additional_17jun2025_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_flint_hills_fires_2022_beta_ff10_02apr2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_flint_hills_fires_2022_beta_ff10_15mar2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_sf2_2022v2_full_10jul2025_rx_hap_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/prevdec_ptday_2022he_ptfire_rx_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_pile_burn_2022v1_08aug2025_nf_v3.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_pile_burn_2022v1_08aug2025_nf_v3
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptday_pile_burn_2022v2_additional_17jun2025_nf_v2
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-rx/ptinv_pile_burn_2022v2_additional_17jun2025_nf_v2.csv
   canada_ptdust:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canada_ptdust/canada_BAU19_2022interp_I041_point_dust_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canada_ptdust/canada_BAU19_2022interp_I041_point_dust_monthly_12jun2024_v0.csv
   ptegu:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptegu/egu_2022_POINT_20250812_multifix_2022cems_14aug2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cem/pthour_01_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptegu/egu_2022_POINT_20250812_multifix_2022cems_14aug2025_v0.csv
+  cem:
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_01_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_02_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_03_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_04_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_05_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_06_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_07_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_08_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_09_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_10_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_11_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_12_2022_2022_2022cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cem/pthour_12_2022_2022_2022cems_20250812_nexthour.csv
   ptfire-wild3D:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/prevdec_ptday_2022he_ptfire_wild_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/prevdec_ptday_2022he_ptfire_wild_all_15aug2025_v0
   canmex_point:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2022interp_I041_point_nodust_noVOC_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2022interp_I041_point_UOG_12jun2024_nf_v2.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2023_I041_point_EPG_monthly_18dec2023_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2022interp_I041_point_CB6VOC_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2022interp_I041_T1_airports_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/canada_BAU19_2022interp_I041_point_VOC_monthly_12jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/Mexico_2022_point_20240615_borderstates_15jun2024_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/2019ge_proj_CEDS_from_Mexico_2016_point_20191209_24apr2025_nf_v5.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/canmex_point/Mexico_2022v2_point_group2states_16apr2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2022interp_I041_point_nodust_noVOC_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2022interp_I041_point_UOG_12jun2024_nf_v2.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2023_I041_point_EPG_monthly_18dec2023_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2022interp_I041_point_CB6VOC_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2022interp_I041_T1_airports_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/canada_BAU19_2022interp_I041_point_VOC_monthly_12jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/Mexico_2022_point_20240615_borderstates_15jun2024_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/2019ge_proj_CEDS_from_Mexico_2016_point_20191209_24apr2025_nf_v5.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/canmex_point/Mexico_2022v2_point_group2states_16apr2025_v0.csv
   ptfire-wild:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire-wild/prevdec_ptday_2022he_ptfire_wild_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptinv_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/ptday_sf2_2022v2_full_10jul2025_wf_hap_ff10_10jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire-wild/prevdec_ptday_2022he_ptfire_wild_all_15aug2025_v0
   ptagfire:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_agburn_2022v1_conus_filtered_12may2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_agburn_2022v1_all_state_data_02jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_midwest_crops_fires_2022v2_final_16jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_agburn_2022v1_conus_filtered_15aug2025_v1
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_agburn_2022v1_all_state_data_02jul2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/prevdec_ptday_2022he_ptagfire_all_15aug2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_midwest_crops_fires_2022v2_final_16jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_idaho_ditch_fires_2022v2_final_08aug2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_idaho_ditch_fires_2022v2_final_15aug2025_v1
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_agburn_2022v1_conus_filtered_12may2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_agburn_2022v1_all_state_data_02jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_midwest_crops_fires_2022v2_final_16jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_agburn_2022v1_conus_filtered_15aug2025_v1
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_agburn_2022v1_all_state_data_02jul2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/prevdec_ptday_2022he_ptagfire_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_midwest_crops_fires_2022v2_final_16jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_idaho_ditch_fires_2022v2_final_08aug2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_idaho_ditch_fires_2022v2_final_15aug2025_v1
   ptnonipm:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptnonipm/nonegu_norail_2022_POINT_20250812_14aug2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptnonipm/railyards_2022_POINT_20250812_14aug2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptnonipm/nonegu_norail_2022_POINT_20250812_14aug2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptnonipm/railyards_2022_POINT_20250812_14aug2025_v0.csv
   cmv_c1c2_12:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_US_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_MX_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_CA_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c1c2_12/cmv_C1C2_01_cmv_c1c2_2022_gapfilled_masked_12US1_2022_CA_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_US_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_MX_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c1c2_12/cmv_C1C2_cmv_c1c2_2022_gapfilled_masked_12US1_2022_CA_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c1c2_12/cmv_C1C2_01_cmv_c1c2_2022_gapfilled_masked_12US1_2022_CA_hourly.csv
   ptfire_othna3D:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_finn_ONA_finn_2022_ff10_15jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_finn_MX_finn_2022_ff10_15jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_15jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_15jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_prevdec_18jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_prevdec_18jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_ff10_30jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_30jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_haps_30jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_haps_ff10_30jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_pile_burn_2022_canada_ff10_17jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_pile_burn_2022_canada_ff10_17jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/prevdec_ptday_2022hc_canada_fires_all_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_finn_ONA_finn_2022_ff10_15jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_finn_MX_finn_2022_ff10_15jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_15jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_15jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_prevdec_18jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_prevdec_18jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_ff10_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_30jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_haps_30jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_haps_ff10_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_pile_burn_2022_canada_ff10_17jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_pile_burn_2022_canada_ff10_17jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/prevdec_ptday_2022hc_canada_fires_all_30jun2024_v0
   ptfire_othna:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_finn_ONA_finn_2022_ff10_15jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_finn_MX_finn_2022_ff10_15jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_15jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_15jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_prevdec_18jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_prevdec_18jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_ff10_30jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_30jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_haps_30jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_haps_ff10_30jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptday_pile_burn_2022_canada_ff10_17jun2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/ptinv_pile_burn_2022_canada_ff10_17jun2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptfire_othna/prevdec_ptday_2022hc_canada_fires_all_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_finn_ONA_finn_2022_ff10_15jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_finn_MX_finn_2022_ff10_15jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_15jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_15jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_ONA_finn_2022_ff10_prevdec_18jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_finn_MX_finn_2022_ff10_prevdec_18jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_ff10_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_30jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_sf2_2022_fbp_canada_boreal_bsp_haps_30jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_sf2_2022_fbp_canada_boreal_bsp_haps_ff10_30jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptday_pile_burn_2022_canada_ff10_17jun2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/ptinv_pile_burn_2022_canada_ff10_17jun2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptfire_othna/prevdec_ptday_2022hc_canada_fires_all_30jun2024_v0
   pt_oilgas:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/pt_oilgas/oilgas_2022_POINT_20250812_14aug2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/pt_oilgas/oilgas_2022_POINT_20250812_14aug2025_v0.csv
   airports:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/airports/2022hd_airports_2022_point_top51_adjusted_ATL_data_20250428_27may2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/airports/2022hd_airports_2022_point_top51_adjusted_ATL_data_20250428_27may2025_v0.csv
   ptagfire3D:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_agburn_2022v1_conus_filtered_12may2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_agburn_2022v1_all_state_data_02jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_midwest_crops_fires_2022v2_final_16jul2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_agburn_2022v1_conus_filtered_15aug2025_v1
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_agburn_2022v1_all_state_data_02jul2024_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/prevdec_ptday_2022he_ptagfire_all_15aug2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_midwest_crops_fires_2022v2_final_16jul2025_v0
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptinv_idaho_ditch_fires_2022v2_final_08aug2025_nf_v1.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptagfire/ptday_idaho_ditch_fires_2022v2_final_15aug2025_v1
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_agburn_2022v1_conus_filtered_12may2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_agburn_2022v1_all_state_data_02jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_midwest_crops_fires_2022v2_final_16jul2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_agburn_2022v1_conus_filtered_15aug2025_v1
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_agburn_2022v1_all_state_data_02jul2024_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/prevdec_ptday_2022he_ptagfire_all_15aug2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_midwest_crops_fires_2022v2_final_16jul2025_v0
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptinv_idaho_ditch_fires_2022v2_final_08aug2025_nf_v1.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptagfire/ptday_idaho_ditch_fires_2022v2_final_15aug2025_v1
   cmv_c3_12:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_US_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_MX_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_CA_annual_11jul2024_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/cmv_c3_12/cmv_C3_01_cmv_c3_2022_gapfilled_masked_12US1_2022_CA_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_US_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_MX_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c3_12/cmv_C3_cmv_c3_2022_gapfilled_masked_12US1_2022_CA_annual_11jul2024_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/cmv_c3_12/cmv_C3_01_cmv_c3_2022_gapfilled_masked_12US1_2022_CA_hourly.csv
   ptnonipm_hr:
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptnonipm_hr/nonegu_norail_2022_POINT_20250428_forhourly_minnesota_30may2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptnonipm_hr/nonegu_norail_2022_POINT_20250812_forhourly_CEMs_2022cems_14aug2025_v0.csv
-  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/inputs/ptnonipm_hr/pthour_01_2022_2022_2022-nonegu-cems_20250812_hourly.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptnonipm_hr/nonegu_norail_2022_POINT_20250428_forhourly_minnesota_30may2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptnonipm_hr/nonegu_norail_2022_POINT_20250812_forhourly_CEMs_2022cems_14aug2025_v0.csv
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/ptnonipm_hr/pthour_01_2022_2022_2022-nonegu-cems_20250812_hourly.csv

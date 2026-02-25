@@ -12,20 +12,78 @@ from shapely.geometry import Polygon
 import pyproj
 import re
 
-# Import the function from griddesc2shp.py
-try:
-    from griddesc2shp import extract_grid
-except ImportError:
-    warnings.warn("Could not import extract_grid from griddesc2shp.py. Grid extraction might fail if not found.")
-    def extract_grid(*args, **kwargs):
-        raise ImportError("extract_grid function not found. Please ensure griddesc2shp.py is in the search path.")
+# --- GRIDDESC Parsing Logic (integrated from griddesc2shp.py) ---
+def _clean_name(raw: str) -> str:
+    """Helper to clean coordinate and grid names from GRIDDESC."""
+    raw = raw.split('!')[0]  # drop inline comment
+    raw = raw.strip()
+    raw = re.sub(r"['`,]", "", raw)  # drop quotes/commas/backticks
+    raw = re.sub(r"\s+", " ", raw)
+    return raw.strip()
+
+def parse_griddesc_all(path: str):
+    """
+    Parses a SMOKE/CMAQ GRIDDESC file containing coordinate systems and grid definitions.
+    Returns: (coords_dict, grids_dict)
+    """
+    with open(path, 'r') as f:
+        lines = f.readlines()
+    try:
+        sep_idx = next(i for i, ln in enumerate(lines) if "' '  !  end coords." in ln)
+    except StopIteration:
+        raise ValueError("Missing coordinate block terminator (' '  !  end coords.)")
+
+    coords = {}
+    i = 0
+    while i < sep_idx:
+        line = lines[i].strip()
+        if line.startswith("'") and not line.startswith("!"):
+            name = _clean_name(line)
+            i += 1
+            if i < sep_idx:
+                params_line = lines[i].strip()
+                # Handle Fortran 'D' notation
+                nums = [float(tok.replace('D', 'E')) for tok in re.split(r',\s*|\s+', params_line) if tok.strip()]
+                coords[name] = nums
+        i += 1
+
+    grids = {}
+    i = sep_idx + 1
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith("'") and not line.startswith("!") and line != "' '":
+            gname = _clean_name(line)
+            i += 1
+            if i < len(lines):
+                params_line = lines[i].strip()
+                parts = [p.strip() for p in params_line.split(',') if p.strip()]
+                if parts:
+                    coord_ref = _clean_name(parts[0])
+                    rest = [float(p.replace('D', 'E')) for p in parts[1:]]
+                    grids[gname] = [coord_ref] + rest
+        i += 1
+    return coords, grids
+
+def extract_grid(path: str, grid_id: str):
+    """
+    Extracts projection and grid parameters for a specific grid_id from a GRIDDESC file.
+    """
+    coords, grids = parse_griddesc_all(path)
+    gid_clean = _clean_name(grid_id)
+    if gid_clean not in grids:
+        raise ValueError(f"Grid '{grid_id}' not found. Available: {', '.join(sorted(grids.keys()))}")
+    grid_params = grids[gid_clean]
+    coord_name = grid_params[0]
+    if coord_name not in coords:
+        raise ValueError(f"Projection '{coord_name}' referenced by grid '{gid_clean}' not defined in coords section.")
+    return coords[coord_name], grid_params
 
 # --- Default FF10 Headers ---
 DEFAULT_HEADERS = {
     'FF10_POINT':['country_cd', 'region_cd', 'tribal_code', 'facility_id', 'unit_id', 'rel_point_id', 'process_id', 'agy_facility_id', 'agy_unit_id', 'agy_rel_point_id', 'agy_process_id', 'scc', 'poll', 'ann_value', 'ann_pct_red', 'facility_name', 'erptype', 'stkhgt', 'stkdiam', 'stktemp', 'stkflow', 'stkvel', 'naics', 'longitude', 'latitude', 'll_datum', 'horiz_coll_mthd', 'design_capacity', 'design_capacity_units', 'reg_codes', 'fac_source_type', 'unit_type_code', 'control_ids', 'control_measures', 'current_cost', 'cumulative_cost', 'projection_factor', 'submitter_id', 'calc_method', 'data_set_id', 'facil_category_code', 'oris_facility_code', 'oris_boiler_id', 'ipm_yn', 'calc_year', 'date_updated', 'fug_height', 'fug_width_xdim', 'fug_length_ydim', 'fug_angle', 'zipcode', 'annual_avg_hours_per_year', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value',"jan_pctred","feb_pctred","mar_pctred","apr_pctred","may_pctred","jun_pctred","jul_pctred","aug_pctred","sep_pctred","oct_pctred","nov_pctred","dec_pctred","comment"],
     'FF10_NONPOINT':['country_cd', 'region_cd', 'tribal_code', 'census_tract_cd', 'shape_id', 'scc', 'emis_type', 'poll', 'ann_value', 'ann_pct_red', 'control_ids', 'control_measures', 'current_cost', 'cumulative_cost', 'projection_factor', 'reg_codes', 'calc_method', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value', 'jan_pctred','feb_pctred','mar_pctred','apr_pctred','may_pctred','jun_pctred','jul_pctred','aug_pctred','sep_pctred','oct_pctred','nov_pctred','dec_pctred','comment'],
     'FF10_ACTIVITY':['country_cd', 'region_cd', 'tribal_code', 'census_tract_cd', 'shape_id', 'scc', 'CD', 'MSR', 'activity_type', 'ann_parm_value', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value', 'comment'],
-    'FF10_HOURLY_POINT':['country_cd', 'region_cd', 'tribal_code', 'facility_id', 'unit_id', 'rel_point_id', 'process_id', 'scc', 'poll', 'op_type_cd', 'calc_method', 'date_updated', 'date', 'daytot', 'hrval0', 'hrval1', 'hrval2', 'hrval3', 'hrval4', 'hrval5', 'hrval6', 'hrval7', 'hrval8', 'hrval9', 'hrval10', 'hrval11', 'hrval12', 'hrval13', 'comment'],
+    'FF10_HOURLY_POINT':['country_cd', 'region_cd', 'tribal_code', 'facility_id', 'unit_id', 'rel_point_id', 'process_id', 'scc', 'poll', 'op_type_cd', 'calc_method', 'date_updated', 'date', 'daytot', 'hrval0', 'hrval1', 'hrval2', 'hrval3', 'hrval4', 'hrval5', 'hrval6', 'hrval7', 'hrval8', 'hrval9', 'hrval10', 'hrval11', 'hrval12', 'hrval13', 'hrval14', 'hrval15', 'hrval16', 'hrval17', 'hrval18', 'hrval19', 'hrval20', 'hrval21', 'hrval22', 'hrval23', 'comment'],
     'FF10_NONROAD':['country_cd', 'region_cd', 'tribal_code', 'census_tract_cd', 'shape_id', 'scc', 'emis_type', 'poll', 'ann_value', 'ann_pct_red', 'control_ids', 'control_measures', 'current_cost', 'cumulative_cost', 'projection_factor', 'reg_codes', 'calc_method', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value','jan_pctred','feb_pctred','mar_pctred','apr_pctred','may_pctred','jun_pctred','jul_pctred','aug_pctred','sep_pctred','oct_pctred','nov_pctred','dec_pctred','comment'],
     'FF10_DAILY_POINT':['country_cd','region_cd','tribal_code','facility_id','unit_id','rel_point_id','process_id','scc','poll','op_type_cd','calc_method','date_updated','monthnum','monthtot','dayval1','dayval2','dayval3','dayval4','dayval5','dayval6','dayval7','dayval8','dayval9','dayval10','dayval11','dayval12','dayval13','dayval14','dayval15','dayval16','dayval17','dayval18','dayval19','dayval20','dayval21','dayval22','dayval23','dayval24','dayval25','dayval26','dayval27','dayval28','dayval29','dayval30','dayval31','comment'],
     'FF10_DAILY_NONPOINT':['country_cd','region_cd','tribal_code','census_tract','shape_id','tbd','emis_type','scc','poll','op_type_cd','calc_method','date_updated','monthnum','monthtot','dayval1','dayval2','dayval3','dayval4','dayval5','dayval6','dayval7','dayval8','dayval9','dayval10','dayval11','dayval12','dayval13','dayval14','dayval15','dayval16','dayval17','dayval18','dayval19','dayval20','dayval21','dayval22','dayval23','dayval24','dayval25','dayval26','dayval27','dayval28','dayval29','dayval30','dayval31','comment']

@@ -1,3 +1,4 @@
+directory_definitions: /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/scripts/directory_definitions.csh
 biogenics:
 - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/scripts/biogenics/Annual_beis4_12US1_2022he_cb6_22m.csh
 nonpoint:
