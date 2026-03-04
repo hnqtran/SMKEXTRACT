@@ -9,7 +9,7 @@ filename_prepend: "" # String to replace the base filename. If empty, uses origi
 filename_append: "" # _extracted # String to append to the end of the base filename.
 
 # --- Process Control ---
-filter_sector: [ptfire-rx] # List of sector names to process (e.g. ['onroad']), or 'all' to process everything
+filter_sector: [onroad_nonpt] # List of sector names to process (e.g. ['onroad']), or 'all' to process everything
 skip_sector: [] # List of sector names to skip (auto-populated after success)
 
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -113,6 +113,8 @@ sector:
   np_solvents:
   - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_solvents/np_solvents_2022v1_20240221_31mar2025_nf_v1.csv
   - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/np_solvents/np_solvents_2022v1_20240221_HAPs_31mar2025_nf_v2.csv
+  onroad_nonpt:
+  - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022hd_cb6_22m/inputs/onroad/2022hd_onroad_SMOKE_MOVES_MOVES5_FF10_HAPCAP_28may2025_v0.csv
   onroad_diesel:
   - /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/inputs/onroad_diesel/VMT_2022v2_full_monthly_11apr2025_v3.csv
   onroad:

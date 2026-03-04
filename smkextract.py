@@ -85,6 +85,7 @@ DEFAULT_HEADERS = {
     'FF10_ACTIVITY':['country_cd', 'region_cd', 'tribal_code', 'census_tract_cd', 'shape_id', 'scc', 'CD', 'MSR', 'activity_type', 'ann_parm_value', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value', 'comment'],
     'FF10_HOURLY_POINT':['country_cd', 'region_cd', 'tribal_code', 'facility_id', 'unit_id', 'rel_point_id', 'process_id', 'scc', 'poll', 'op_type_cd', 'calc_method', 'date_updated', 'date', 'daytot', 'hrval0', 'hrval1', 'hrval2', 'hrval3', 'hrval4', 'hrval5', 'hrval6', 'hrval7', 'hrval8', 'hrval9', 'hrval10', 'hrval11', 'hrval12', 'hrval13', 'hrval14', 'hrval15', 'hrval16', 'hrval17', 'hrval18', 'hrval19', 'hrval20', 'hrval21', 'hrval22', 'hrval23', 'comment'],
     'FF10_NONROAD':['country_cd', 'region_cd', 'tribal_code', 'census_tract_cd', 'shape_id', 'scc', 'emis_type', 'poll', 'ann_value', 'ann_pct_red', 'control_ids', 'control_measures', 'current_cost', 'cumulative_cost', 'projection_factor', 'reg_codes', 'calc_method', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value','jan_pctred','feb_pctred','mar_pctred','apr_pctred','may_pctred','jun_pctred','jul_pctred','aug_pctred','sep_pctred','oct_pctred','nov_pctred','dec_pctred','comment'],
+    'FF10_ONROAD':['country_cd', 'region_cd', 'tribal_code', 'facility_id', 'unit_id', 'rel_point_id', 'process_id', 'scc', 'emis_type', 'poll', 'ann_value', 'ann_pct_red', 'control_ids', 'control_measures', 'current_cost', 'cumulative_cost', 'projection_factor', 'reg_codes', 'calc_method', 'calc_year', 'date_updated', 'data_set_id', 'jan_value', 'feb_value', 'mar_value', 'apr_value', 'may_value', 'jun_value', 'jul_value', 'aug_value', 'sep_value', 'oct_value', 'nov_value', 'dec_value','jan_pctred','feb_pctred','mar_pctred','apr_pctred','may_pctred','jun_pctred','jul_pctred','aug_pctred','sep_pctred','oct_pctred','nov_pctred','dec_pctred','comment'],
     'FF10_DAILY_POINT':['country_cd','region_cd','tribal_code','facility_id','unit_id','rel_point_id','process_id','scc','poll','op_type_cd','calc_method','date_updated','monthnum','monthtot','dayval1','dayval2','dayval3','dayval4','dayval5','dayval6','dayval7','dayval8','dayval9','dayval10','dayval11','dayval12','dayval13','dayval14','dayval15','dayval16','dayval17','dayval18','dayval19','dayval20','dayval21','dayval22','dayval23','dayval24','dayval25','dayval26','dayval27','dayval28','dayval29','dayval30','dayval31','comment'],
     'FF10_DAILY_NONPOINT':['country_cd','region_cd','tribal_code','census_tract','shape_id','tbd','emis_type','scc','poll','op_type_cd','calc_method','date_updated','monthnum','monthtot','dayval1','dayval2','dayval3','dayval4','dayval5','dayval6','dayval7','dayval8','dayval9','dayval10','dayval11','dayval12','dayval13','dayval14','dayval15','dayval16','dayval17','dayval18','dayval19','dayval20','dayval21','dayval22','dayval23','dayval24','dayval25','dayval26','dayval27','dayval28','dayval29','dayval30','dayval31','comment']
 }
@@ -109,6 +110,8 @@ def get_ff10_type(path):
         ff10_fmt = 'FF10_ACTIVITY'
     elif 'FF10_HOURLY_POINT' in first_line:
         ff10_fmt = 'FF10_HOURLY_POINT'
+    elif 'FF10_ONROAD' in first_line:
+        ff10_fmt = 'FF10_ONROAD'
     elif 'FF10_NONROAD' in first_line:
         ff10_fmt = 'FF10_NONROAD'
     elif 'FF10_NONPOINT' in first_line:
@@ -289,6 +292,18 @@ def stream_extract(input_path, output_path, filters):
 def parse_costcy(path):
     """
     Parses COSTCY file to extract mapping of names/states to 6-digit FIPS.
+    Uses fixed-width column extraction matching SMOKE's rdstcy.f parsing.
+    
+    Fixed-width column positions (1-based, matching Fortran):
+    - Columns 2-3: State abbreviation
+    - Columns 5-24: County name
+    - Column 26: Country code
+    - Columns 27-28: State code
+    - Columns 29-31: County code
+    - Columns 40-42: Time zone
+    
+    Note: File lines are wrapped at ~80 characters, so we check if a line looks
+    like a county record (starts with space + 2-char state + spaces).
     """
     if not os.path.isfile(path):
         return {}
@@ -296,12 +311,10 @@ def parse_costcy(path):
     data = {'fips': {}, 'states': {}, 'counties': {}}
     in_county = False
     
-    # Example line: " AL           Autauga Co 0 1  1        CST ..."
-    # Modified to capture numeric parts as blob to handle '0 1 1' vs '053 1' formats
-    county_pattern = re.compile(r'^\s*([A-Z0-9]{2})\s+(.*?)\s+([0-9\s]+)\s+([A-Z]{3,4})')
-    
     with open(path, 'r', encoding='latin-1') as f:
         for line in f:
+            line = line.rstrip('\n')
+            
             if '/COUNTY/' in line:
                 in_county = True
                 continue
@@ -310,46 +323,71 @@ def parse_costcy(path):
             if not in_county or line.startswith('#') or not line.strip():
                 continue
             
-            match = county_pattern.match(line)
-            if match:
-                st_abbr, name, num_blob, tz = match.groups()
-                parts = num_blob.split()
+            # Must be long enough for our extraction (at least 42 chars for timezone)
+            if len(line) < 42:
+                continue
+            
+            # Check if this looks like a county line:
+            # Starts with space, then 2-char state abbr, then spaces
+            if not (line[0:1] == ' ' and len(line) > 2):
+                continue
+            
+            try:
+                # Extract using fixed-width columns (Python uses 0-based indexing)
+                # Fortran column 1 is Python index 0, so Fortran columns 2-3 are Python [1:3]
                 
-                if len(parts) == 3:
-                     country, st_fips, co_fips = parts
-                elif len(parts) == 2:
-                     # Merged CountryState (e.g. 053 or 010) + County
-                     combined, co_fips = parts
-                     if len(combined) > 1:
-                         country = combined[0]
-                         st_fips = combined[1:]
-                     else:
-                         continue 
-                else:
-                     continue
-
+                st_abbr = line[1:3].strip()
+                
+                # Fortran columns 5-24 → Python indices 4:24 (county name)
+                name = line[4:24].strip()
+                
+                # Fortran column 26 → Python index 25
+                country_str = line[25:26].strip()
+                
+                # Fortran columns 27-28 → Python indices 26:28
+                state_str = line[26:28].strip()
+                
+                # Fortran columns 29-31 → Python indices 28:31
+                county_str = line[28:31].strip()
+                
+                # Fortran columns 40-42 → Python indices 39:42
+                tz = line[39:42].strip()
+                
+                # Validate required fields
+                if not st_abbr or not name or not tz:
+                    continue
+                
+                # Validate and convert to integers
                 try:
-                    fips6 = f"{int(country)}{int(st_fips):02d}{int(co_fips):03d}"
+                    country = int(country_str) if country_str else 0
+                    state = int(state_str) if state_str else 0
+                    county = int(county_str) if county_str else 0
                 except ValueError:
                     continue
-
-                name = name.strip()
+                
+                # Build 6-digit FIPS: country (1) + state (2) + county (3)
+                fips6 = f"{country:1d}{state:02d}{county:03d}"
                 
                 entry = {
                     'fips': fips6,
-                    'state_abbr': st_abbr.strip(),
+                    'state_abbr': st_abbr,
                     'name': name,
                     'timezone': tz
                 }
                 data['fips'][fips6] = entry
                 
                 # Group by state
-                if st_abbr not in data['states']: data['states'][st_abbr] = []
+                if st_abbr not in data['states']:
+                    data['states'][st_abbr] = []
                 data['states'][st_abbr].append(fips6)
                 
-                # Map name to fips
+                # Map name to fips (use state abbreviation if available)
                 full_name = f"{st_abbr}:{name}".lower()
                 data['counties'][full_name] = fips6
+                    
+            except (ValueError, IndexError):
+                # Skip malformed lines
+                continue
 
     return data
 
