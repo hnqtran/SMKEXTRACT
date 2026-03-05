@@ -11,6 +11,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 import pyproj
 import re
+import gzip
 
 # --- GRIDDESC Parsing Logic (integrated from griddesc2shp.py) ---
 def _clean_name(raw: str) -> str:
@@ -94,11 +95,14 @@ def split_csv_line(line):
     return next(csv.reader([line], skipinitialspace=False))
 
 def get_ff10_type(path):
+    opener = gzip.open if path.endswith('.gz') else open
+    mode = 'rt' if path.endswith('.gz') else 'r'
+    
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with opener(path, mode, encoding='utf-8') as f:
             first_line = f.readline()
-    except UnicodeDecodeError:
-        with open(path, 'r', encoding='latin-1') as f:
+    except (UnicodeDecodeError, EOFError):
+        with opener(path, mode, encoding='latin-1') as f:
             first_line = f.readline()
 
     ff10_fmt = None
@@ -125,9 +129,9 @@ def get_ff10_type(path):
 
     encoding = 'utf-8'
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with opener(path, mode, encoding='utf-8') as f:
             f.read(1024)
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, EOFError):
         encoding = 'latin-1'
 
     return ff10_fmt, expected_headers, encoding
@@ -201,7 +205,10 @@ def create_domain_gdf(griddesc_path, grid_id):
 def stream_extract(input_path, output_path, filters):
     ff10_fmt, expected_headers, encoding = get_ff10_type(input_path)
     count = 0
-    with open(input_path, 'r', encoding=encoding) as fin, \
+    opener = gzip.open if input_path.endswith('.gz') else open
+    mode = 'rt' if input_path.endswith('.gz') else 'r'
+    
+    with opener(input_path, mode, encoding=encoding) as fin, \
          open(output_path, 'w', encoding=encoding) as fout:
         
         header_cols = None
@@ -263,15 +270,23 @@ def stream_extract(input_path, output_path, filters):
                         break
                     continue
                     
-                val = values[idx].strip('"')
+                val = values[idx].strip().strip('"')
                 
                 match = False
                 if f['vals'] is not None:
-                    # Generic string match
-                    if val in f['vals']: match = True
-                    # Special handling for FIPS (allow matching 5-digit region_cd with 6-digit fips if country is 0)
-                    elif f['col_name'] == 'region_cd' and len(val) == 5:
-                        if ('0' + val) in f['vals']: match = True
+                    # Clean the field value for comparison
+                    if val in f['vals']: 
+                        match = True
+                    # Special robust handling for geographic region_cd (FIPS):
+                    # Canonicalize any numeric code of length 1-6 to SMOKE 12-digit format
+                    elif f['col_name'] == 'region_cd' and val.isdigit() and 1 <= len(val) <= 6:
+                        try:
+                            fips_12digit = f"{int(val):012d}"
+                            if fips_12digit in f['vals']: 
+                                match = True
+                        except ValueError:
+                            pass
+
                 elif f['range'] is not None:
                     try:
                         fval, start, end = float(val), float(f['range'][0]), float(f['range'][1])
@@ -365,25 +380,28 @@ def parse_costcy(path):
                 except ValueError:
                     continue
                 
-                # Build 6-digit FIPS: country (1) + state (2) + county (3)
-                fips6 = f"{country:1d}{state:02d}{county:03d}"
+                # Build 12-digit FIPS code following SMOKE/rdstcy.f format
+                # country (1 digit) + state (2 digits) + county (3 digits)
+                # Matches rdstcy.f: FIP = COU*100000 + STA*1000 + CNY; WRITE(CFIP,'(I12.12)')
+                fip = country * 100000 + state * 1000 + county
+                fips12 = f"{fip:012d}"
                 
                 entry = {
-                    'fips': fips6,
+                    'fips': fips12,
                     'state_abbr': st_abbr,
                     'name': name,
                     'timezone': tz
                 }
-                data['fips'][fips6] = entry
+                data['fips'][fips12] = entry
                 
                 # Group by state
                 if st_abbr not in data['states']:
                     data['states'][st_abbr] = []
-                data['states'][st_abbr].append(fips6)
+                data['states'][st_abbr].append(fips12)
                 
                 # Map name to fips (use state abbreviation if available)
                 full_name = f"{st_abbr}:{name}".lower()
-                data['counties'][full_name] = fips6
+                data['counties'][full_name] = fips12
                     
             except (ValueError, IndexError):
                 # Skip malformed lines
@@ -476,18 +494,35 @@ if __name__ == "__main__":
     # 1. Direct FIPS Filter (with expansion)
     fips_to_filter = []
     for f in raw_fips:
-        # Check for generic state FIPS (e.g. '053000')
-        if f.endswith('000') and len(f) == 6 and costcy_data:
-            state_prefix = f[:3]
+        # Convert user-provided 6-digit FIPS to 12-digit format for internal use
+        f_12digit = f
+        if len(f) == 6 and f.isdigit():
+            # User provided 6-digit (SSCCC format, e.g., "08041" = state 08 + county 041)
+            # Convert to 12-digit integer format used by SMOKE: format the integer with I12.12
+            # Example: 08041 (int) → "000000008041" (12-digit string)
+            try:
+                fips_int = int(f)
+                f_12digit = f"{fips_int:012d}"
+            except ValueError:
+                pass  # Keep original if not convertible
+        
+        # Check for generic state FIPS (e.g. '053000' in 6-digit or '000000053000' in 12-digit)
+        # Generic FIPS ends with '000' and is used to select all counties in a state
+        if f_12digit.endswith('000') and costcy_data:
+            # Extract state code: for 12-digit "000000053000", state code is at positions 6-9
+            # The format is "0CCCSSCCC" where CCC=country(1)+expansion(5), SS=state, CCC=county
+            # For generic FIPS ending in 000, we want all counties in that state
+            state_code = f_12digit[6:9]  # Get state code (e.g., "053" from "000000053000")
+            state_prefix = f"000000{state_code}"  # Prefix to match all counties in state
             expanded = [k for k in costcy_data['fips'].keys() if k.startswith(state_prefix)]
             if expanded:
                 fips_to_filter.extend(expanded)
                 print(f"Expanded generic FIPS {f} to {len(expanded)} counties.")
             else:
-                fips_to_filter.append(f)
+                fips_to_filter.append(f_12digit)
                 print(f"Warning: Generic FIPS {f} found no matches in COSTCY.")
         else:
-             fips_to_filter.append(f)
+             fips_to_filter.append(f_12digit)
 
     # 2. State Filter (Lookup in COSTCY)
     if config.get('filter_states') and costcy_data:
@@ -525,16 +560,36 @@ if __name__ == "__main__":
         print(f"Creating grid domain for {config['filter_grid']}...")
         grid_gdf = create_domain_gdf(config['griddesc_path'], config['filter_grid'])
         counties_spatial = get_intersecting_counties(grid_gdf, config['county_shp'])
-        active_filters.append({'col_name': 'region_cd', 'vals': set(counties_spatial), 'range': None, 'is_exclusion': is_exclusion})
-        print(f"Added grid filter with {len(counties_spatial)} counties.")
+        # Convert county codes to 12-digit format if needed
+        counties_spatial_12digit = []
+        for county_code in counties_spatial:
+            if len(county_code) == 5 and county_code.isdigit():
+                # 5-digit FIPS: convert to 12-digit
+                fips_int = int(county_code)
+                counties_spatial_12digit.append(f"{fips_int:012d}")
+            else:
+                # Use as-is (already 12-digit or other format)
+                counties_spatial_12digit.append(county_code)
+        active_filters.append({'col_name': 'region_cd', 'vals': set(counties_spatial_12digit), 'range': None, 'is_exclusion': is_exclusion})
+        print(f"Added grid filter with {len(counties_spatial_12digit)} counties.")
 
     # 5. Shapefile Filter (GIS)
     if config.get('filter_shp') and os.path.isfile(config.get('filter_shp')):
         print(f"Loading input shapefile {config['filter_shp']}...")
         gis_gdf = gpd.read_file(config['filter_shp'])
         counties_spatial = get_intersecting_counties(gis_gdf, config['county_shp'])
-        active_filters.append({'col_name': 'region_cd', 'vals': set(counties_spatial), 'range': None, 'is_exclusion': is_exclusion})
-        print(f"Added shapefile filter with {len(counties_spatial)} counties.")
+        # Convert county codes to 12-digit format if needed
+        counties_spatial_12digit = []
+        for county_code in counties_spatial:
+            if len(county_code) == 5 and county_code.isdigit():
+                # 5-digit FIPS: convert to 12-digit
+                fips_int = int(county_code)
+                counties_spatial_12digit.append(f"{fips_int:012d}")
+            else:
+                # Use as-is (already 12-digit or other format)
+                counties_spatial_12digit.append(county_code)
+        active_filters.append({'col_name': 'region_cd', 'vals': set(counties_spatial_12digit), 'range': None, 'is_exclusion': is_exclusion})
+        print(f"Added shapefile filter with {len(counties_spatial_12digit)} counties.")
     elif config.get('filter_shp'):
         print(f"Warning: filter_shp is defined but file not found: {config.get('filter_shp')}")
 
@@ -588,8 +643,8 @@ if __name__ == "__main__":
         sector_output = os.path.join(outputs_root, sector)
         os.makedirs(sector_output, exist_ok=True)
         sector_success, files_processed = True, 0
-
-        for fname in fnames:
+        n_files = len(fnames)
+        for i, fname in enumerate(fnames):
             ff10_path = fname
             
             if not os.path.exists(ff10_path):
@@ -598,15 +653,23 @@ if __name__ == "__main__":
                 continue
 
             try:
-                base, ext = os.path.splitext(os.path.basename(ff10_path))
+                fn = os.path.basename(ff10_path)
+                # Robust extension splitting for compound extensions like .csv.gz
+                if fn.endswith('.csv.gz'):
+                    base, ext = fn[:-7], '.csv.gz'
+                elif fn.endswith('.txt.gz'):
+                    base, ext = fn[:-7], '.txt.gz'
+                else:
+                    base, ext = os.path.splitext(fn)
+
                 prepend = config.get('filename_prepend') or ""
                 append = config.get('filename_append') or ""
                 
                 if prepend:
-                    # User specified a prepend to replace the base name
-                    out_name = f"{prepend}{append}{ext}"
+                    # Handle multiple input files targeting the same sector to avoid overwrites
+                    suffix = f"_{i+1}" if n_files > 1 else ""
+                    out_name = f"{prepend}{append}{suffix}{ext}"
                 else:
-                    # Use current auto logic (original base name)
                     out_name = f"{base}{append}{ext}"
                     
                 outfile = os.path.join(sector_output, out_name)
