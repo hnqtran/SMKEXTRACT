@@ -1,0 +1,6 @@
+# Configuration for build_emp_runscripts_yaml.py
+scripts_root: /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2020/2020ha2_cb6_20k/scripts
+output_yaml: /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/utils/smkextract/emp2020_runscripts.yaml
+# Optionally restrict to certain groups (subfolders under scripts/)
+include_groups: [biogenics, nonpoint, onroad, point]
+exclude_groups: []

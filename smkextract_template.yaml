@@ -1,0 +1,53 @@
+# --- Path Settings ---
+outputs: # Root directory for extracted output files; e.g., /proj/ie/proj/SMOKE/htran/12LISTOS/2022he_cb6_22m/inputs
+
+# --- Filename Construction Logic ---
+# Final Name = [BaseName] + [filename_append] + [.extension]
+# 1. If filename_prepend is EMPTY:   BaseName = Original filename (e.g. 'rail_data')
+# 2. If filename_prepend is SET:     BaseName = filename_prepend value (e.g. 'v2')
+filename_prepend: "" # String to replace the base filename. If empty, uses original filename.
+filename_append: "" # _extracted # String to append to the end of the base filename.
+
+# --- Process Control ---
+filter_sector: [] # List of sector names to process (e.g. ['onroad']), or 'all' to process everything
+skip_sector: [] # List of sector names to skip (auto-populated after success)
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!! GLOBAL FILTER MODE SETTING                                                            !!!
+# !!! This applies to ALL filter types below (FIPS, States, Counties, Grid, GIS, Column)    !!!
+# !!! - extraction: Keep ONLY records that match the criteria                               !!!
+# !!! - exclusion:  Remove records that match the criteria (keep everything else)           !!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+filter_mode: extraction 
+
+# --- FIPS & Geographic Filters (COSTCY based) ---
+costcy_file:    # Path to SMOKE COSTCY file for lookups; e.g. ge_dat/costcy_for_2017platform_20dec2023_v8.txt
+filter_fips: [] # List of 6-digit FIPS codes (e.g., '001003') to include/exclude
+filter_states: [] # List of state abbreviations (e.g., 'AL', 'NY') to include/exclude (requires costcy_file)
+filter_counties: [] # List of counties as 'ST:County Name' (e.g., 'AL:Autauga Co') to include/exclude (requires costcy_file)
+
+# --- Spatial Filter (Grid Domain) ---
+filter_grid: # Grid ID from griddesc file to use for spatial domain filtering (requires county_shp); e.g., 12LISTOS
+griddesc_path: # Absolute path to the grid description file; e.g., <parent_path>/smkextract/griddesc_simplified.txt 
+
+# --- Shapefile Filter (GIS) ---
+filter_shp: "" # Path to a custom shapefile (GIS) to filter by spatial intersection (requires county_shp)
+
+# --- Reference Data for Spatial Filters ---
+county_shp: /proj/ie/proj/staff/tranhuy/python/GIS/tl_2020_us_county.gpkg # Path to reference county shapefile (bridge for both Grid and Shapefile filters)
+
+# --- Column Filtering ---
+# You can use 'filter_cols' for multiple filters, or legacy 'filter_col' for a single one.
+# Each filter in 'filter_cols' can have its own filter_mode (extraction/exclusion).
+filter_cols: 
+  #- col_name: scc # Column to filter on
+    #filtered_val: [] # List of values to keep/remove
+    # filter_mode: extraction # Local override (extraction/exclusion)
+  #- col_name: poll
+    #filtered_val: []
+    #filter_mode: extraction
+
+# --- Sectors & Files Mapping ---
+sector:
+  # Sector names and their absolute file paths (populated automatically)
+

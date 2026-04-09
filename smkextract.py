@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/utils/smkextract/.venv/bin/python
 
 import os
 import sys

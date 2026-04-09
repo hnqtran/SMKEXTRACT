@@ -27,7 +27,7 @@ echo "Installing dependencies..."
 # 3. Update Shebangs and Permissions
 echo "Configuring scripts..."
 
-SCRIPTS=("smkextract.py" "build_sector_config.py")
+SCRIPTS=("smkextract.py" "build_sector_config.py" "build_emp_runscripts_yaml.py")
 
 for script in "${SCRIPTS[@]}"; do
     SCRIPT_PATH="$DIR/$script"

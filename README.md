@@ -2,38 +2,71 @@
 
 This utility facilitates filtering and processing emission inventory files (FF10 format) from variable sources (e.g. EPA's Emission Modeling Platform) to match a target modeling grid, intersecting counties, specific column values, or geographic identifiers.
 
-The toolkit comprises two component python scripts:
-1. `build_sector_config.py`: Automates configuration setup by parsing EMP run scripts.
-2. `smkextract.py`: The consolidated extractor tool that filters inventories based on Grid, Shapefile, FIPS/State/County, or Column values.
+The toolkit comprises three component python scripts:
+1. `build_emp_runscripts_yaml.py`: Scans EMP scripts folder to generate a manifest of all run scripts.
+2. `build_sector_config.py`: Automates configuration setup by parsing EMP run scripts. **Maintains all comments and settings from `smkextract_template.yaml`.**
+3. `smkextract.py`: The consolidated extractor tool that filters inventories based on Grid, Shapefile, FIPS/State/County, or Column values.
 
-# Setup Instructions
+# Quick Start: 3-Step Workflow
 
-These scripts require Python 3 and several libraries. An installation script is provided to set up a local virtual environment and configure the scripts for execution.
+**STEP 1: Generate emp_runscripts.yaml**
 
-## Installation
-
-Run the provided `install.sh` script. This will:
-1. Create a local python virtual environment (`.venv`) in the script directory.
-2. Install necessary dependencies (`geopandas`, `shapely`, `pyproj`, `pandas`, `pyyaml`).
-3. Update the python scripts (`smkextract.py`, etc.) to use this environment directly.
-4. Make the scripts executable.
+Use the helper script to scan your EMP scripts directory and build a manifest of all run scripts, grouped by sector:
 
 ```sh
-./install.sh
+./build_emp_runscripts_yaml.py --input <path/to/scripts> --output emp_runscripts.yaml
 ```
+- This scans the directory for `.csh` scripts and groups them by sector name found within the files.
+- Output: `emp_runscripts.yaml` listing all relevant scripts.
+
+**STEP 2: Build/Update smkextract.yaml sector mapping**
+
+Parse the run scripts and update the `sector` section of your main config:
+
+```sh
+./build_sector_config.py --runscripts emp_runscripts.yaml --config smkextract.yaml
+```
+- **Automatic Initialization**: If `smkextract.yaml` does not exist, it is created automatically using `smkextract_template.yaml` as a base.
+- **Comment Preservation**: The script preserves all settings and descriptive comments in the header (everything before the `# --- Sectors & Files Mapping ---` marker).
+- **Validation**: Each file path in the `sector:` section is tagged with `# Valid` or `# Missing` for easy verification.
+
+**STEP 3: Run the extractor**
+
+Filter and process emission inventories as needed:
+
+```sh
+./smkextract.py --config smkextract.yaml
+```
+- This applies your filters and outputs processed inventories.
+
+---
+
+# A. build_emp_runscripts_yaml.py
+
+## Overview
+
+`build_emp_runscripts_yaml.py` is a utility designed to scan a directory containing EMP (Emission Modeling Platform) run scripts (typically `.csh` files) and generate a structured YAML manifest (`emp_runscripts.yaml`). This manifest groups the scripts by their sector name, which is parsed directly from inside the `.csh` files.
+
+This script automates **STEP 1** of the workflow, providing the necessary input for `build_sector_config.py`.
 
 ## Usage
 
-After installation, you can run the tool components directly from the command line:
+```sh
+./build_emp_runscripts_yaml.py --input <path/to/scripts_folder> [--output <path/to/manifest.yaml>]
+```
+
+- `--input`: **Required.** The path to the folder containing the EMP `.csh` run scripts.
+- `--output`: Path where the generated manifest will be saved (default: `emp_runscripts.yaml`).
+
+## Example
 
 ```sh
-./smkextract.py --help
-./build_sector_config.py --help
+./build_emp_runscripts_yaml.py --input /proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/2022v2/2022he_cb6_22m/scripts
 ```
 
 ---
 
-# A. build_sector_config.py
+# B. build_sector_config.py
 
 ## Overview
 
@@ -58,7 +91,7 @@ It reads a manifest of runscripts (default: `emp_runscripts.yaml`) and updates t
 
 ---
 
-# B. smkextract.py
+# C. smkextract.py
 
 ## Overview
 
@@ -105,5 +138,5 @@ filter_cols:
 
 ---
 
-# C. Author
+# D. Author
 Huy Tran: tranhuy@email.unc.edu

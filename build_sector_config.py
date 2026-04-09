@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/proj/ie/proj/SMOKE/htran/Emission_Modeling_Platform/utils/smkextract/.venv/bin/python
 
 import argparse
 import os
@@ -98,7 +98,13 @@ def update_config(config_path, sector, filenames):
     Recognizes the '# --- Sectors & Files Mapping ---' marker.
     """
     if not os.path.isfile(config_path):
-        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+        template_path = os.path.join(os.path.dirname(__file__), 'smkextract_template.yaml')
+        if os.path.exists(template_path):
+            print(f"Creating missing config {config_path} from template.")
+            with open(template_path, 'r') as tf, open(config_path, 'w') as cf:
+                cf.write(tf.read())
+        else:
+            raise FileNotFoundError(f"Configuration file not found and template missing: {config_path}")
     
     with open(config_path, 'r') as f:
         lines = f.readlines()
@@ -139,12 +145,13 @@ def update_config(config_path, sector, filenames):
     data['sector'] = sector_mapping
 
     if marker_line_idx != -1:
-        # Rewrite preserving order and comments before marker
+        # Rewrite preserving order and header comments
         with open(config_path, 'w') as f:
+            # Write all lines up to and including the marker
             for i in range(marker_line_idx + 1):
                 f.write(lines[i])
             
-            # Dump the sector dictionary and add inline comments
+            # Dump the sector dictionary (indented 0 spaces)
             sector_yaml = yaml.dump({'sector': sector_mapping}, default_flow_style=False, sort_keys=False)
             yaml_lines = sector_yaml.splitlines()
             final_yaml_lines = []
