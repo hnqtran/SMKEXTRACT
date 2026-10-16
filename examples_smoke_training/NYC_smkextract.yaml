@@ -31,10 +31,10 @@ filter_grid: #12LISTOS # Grid ID from griddesc file to use for spatial domain fi
 griddesc_path: /home/cmas/training/ge_dat/gridding/griddesc_lambertonly_18jan2019_v7.txt # Absolute path to the grid description file
 
 # --- Shapefile Filter (GIS) ---
-filter_shp: /home/cmas/smkextract/example_smoke_training/inputs/NYC/nybb.shp # Path to a custom shapefile (GIS) to filter by spatial intersection (requires county_shp)
+filter_shp: /home/cmas/smkextract/examples_smoke_training/inputs/NYC/nybb.shp # Path to a custom shapefile (GIS) to filter by spatial intersection (requires county_shp)
 
 # --- Reference Data for Spatial Filters ---
-county_shp: /home/cmas/smkextract/example_smoke_training/inputs/cb_2020_us_county_500k_asc2020.gpkg # Path to reference county shapefile (bridge for both Grid and Shapefile filters)
+county_shp: /home/cmas/smkextract/examples_smoke_training/inputs/cb_2020_us_county_500k_asc2020.gpkg # Path to reference county shapefile (bridge for both Grid and Shapefile filters)
 
 # --- Generalized Column Filtering ---
 filter_cols: 
