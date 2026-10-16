@@ -164,8 +164,25 @@ def get_intersecting_counties(domain_gdf, county_shp_path):
         counties = counties.to_crs(domain_gdf.crs)
     intersecting = gpd.sjoin(counties, domain_gdf, how="inner", predicate="intersects")
     
+    # Look for full FIPS / GEOID column first
     county_id_col = None
-    for col in ["GEOID", "geoid", "COUNTYFP", "NAME", "name"]:
+    for col in ["FIPS", "fips", "GEOID", "geoid"]:
+        if col in intersecting.columns:
+            county_id_col = col
+            break
+    if county_id_col:
+        unique_counties = intersecting[[county_id_col]].drop_duplicates()
+        return unique_counties[county_id_col].astype(str).tolist()
+
+    # If separate STATEFP and COUNTYFP columns exist, combine them into 5-digit FIPS
+    cols_lower = {c.lower(): c for c in intersecting.columns}
+    if 'statefp' in cols_lower and 'countyfp' in cols_lower:
+        st_col = cols_lower['statefp']
+        co_col = cols_lower['countyfp']
+        combined = intersecting[st_col].astype(str).str.zfill(2) + intersecting[co_col].astype(str).str.zfill(3)
+        return combined.drop_duplicates().tolist()
+
+    for col in ["COUNTYFP", "countyfp", "NAME", "name"]:
         if col in intersecting.columns:
             county_id_col = col
             break
@@ -302,10 +319,16 @@ def stream_extract(input_path, output_path, filters):
 
                 elif f['range'] is not None:
                     try:
-                        fval, start, end = float(val), float(f['range'][0]), float(f['range'][1])
-                        if start <= fval <= end: match = True
-                    except:
-                        if str(f['range'][0]) <= val <= str(f['range'][1]): match = True
+                        fval = float(val)
+                        start = float(f['range'][0]) if f['range'][0] is not None else float('-inf')
+                        end = float(f['range'][1]) if f['range'][1] is not None else float('inf')
+                        if start <= fval <= end:
+                            match = True
+                    except (ValueError, TypeError):
+                        start_str = str(f['range'][0]) if f['range'][0] is not None else ""
+                        end_str = str(f['range'][1]) if f['range'][1] is not None else "\uffff"
+                        if start_str <= val <= end_str:
+                            match = True
                 
                 passed = (not match) if f.get('is_exclusion') else match
                 if not passed:
@@ -336,7 +359,7 @@ def parse_costcy(path):
     if not os.path.isfile(path):
         return {}
     
-    data = {'fips': {}, 'states': {}, 'counties': {}}
+    data = {'fips': {}, 'states': {}, 'counties': {}, 'entries': []}
     in_county = False
     
     with open(path, 'r', encoding='latin-1') as f:
@@ -398,23 +421,48 @@ def parse_costcy(path):
                 # Matches rdstcy.f: FIP = COU*100000 + STA*1000 + CNY; WRITE(CFIP,'(I12.12)')
                 fip = country * 100000 + state * 1000 + county
                 fips12 = f"{fip:012d}"
+                fips6 = f"{country}{state:02d}{county:03d}"
+                fips5 = f"{state:02d}{county:03d}" if country == 0 else None
                 
                 entry = {
-                    'fips': fips12,
+                    'country': country,
+                    'state': state,
+                    'county': county,
+                    'fips6': fips6,
+                    'fips12': fips12,
+                    'fips5': fips5,
                     'state_abbr': st_abbr,
                     'name': name,
                     'timezone': tz
                 }
+                data['entries'].append(entry)
                 data['fips'][fips12] = entry
+                data['fips'][fips6] = entry
+                if fips5:
+                    data['fips'][fips5] = entry
                 
                 # Group by state
                 if st_abbr not in data['states']:
                     data['states'][st_abbr] = []
-                data['states'][st_abbr].append(fips12)
+                data['states'][st_abbr].append(entry)
                 
-                # Map name to fips (use state abbreviation if available)
+                # Map name to entry
                 full_name = f"{st_abbr}:{name}".lower()
-                data['counties'][full_name] = fips12
+                data['counties'][full_name] = entry
+                
+                # Support variations with/without 'Co' or 'County'
+                name_lower = name.lower()
+                if name_lower.endswith(' co'):
+                    base = name_lower[:-3].strip()
+                    data['counties'][f"{st_abbr}:{base}".lower()] = entry
+                    data['counties'][f"{st_abbr}:{base} county".lower()] = entry
+                elif name_lower.endswith(' county'):
+                    base = name_lower[:-7].strip()
+                    data['counties'][f"{st_abbr}:{base}".lower()] = entry
+                    data['counties'][f"{st_abbr}:{base} co".lower()] = entry
+                else:
+                    data['counties'][f"{st_abbr}:{name_lower} co".lower()] = entry
+                    data['counties'][f"{st_abbr}:{name_lower} county".lower()] = entry
                     
             except (ValueError, IndexError):
                 # Skip malformed lines
@@ -434,9 +482,12 @@ def load_config(config_path):
             return os.path.normpath(os.path.join(config_dir, path))
         return path
     
-    for key in ['outputs', 'county_shp', 'griddesc_path', 'input_shp', 'costcy_file']:
+    for key in ['outputs', 'county_shp', 'griddesc_path', 'input_shp', 'costcy_file', 'filter_shp']:
         if key in config:
-            config[key] = resolve(config[key])
+            if isinstance(config[key], list):
+                config[key] = [resolve(p) for p in config[key] if p]
+            else:
+                config[key] = resolve(config[key])
     return config
 
 if __name__ == "__main__":
@@ -459,6 +510,13 @@ if __name__ == "__main__":
     
     # Global Filter Mode
     global_filter_mode = config.get('filter_mode', 'extraction').lower()
+    valid_filter_modes = {'extraction', 'extract', 'exclusion', 'exclude'}
+    if global_filter_mode not in valid_filter_modes:
+        warnings.warn(
+            f"Unrecognized filter_mode '{global_filter_mode}'. "
+            f"Expected one of: {', '.join(sorted(valid_filter_modes))}. Defaulting to 'extraction'."
+        )
+        global_filter_mode = 'extraction'
     is_exclusion = global_filter_mode in ['exclusion', 'exclude']
     print(f"Global Filter Mode: {global_filter_mode.upper()} {'(Excluding matches)' if is_exclusion else '(Keeping matches)'}")
 
@@ -475,10 +533,40 @@ if __name__ == "__main__":
     filter_sector = config.get('filter_sector', 'all')
     if isinstance(filter_sector, list):
         filter_sector = set(filter_sector)
+    is_all_sectors = (filter_sector == 'all' or (isinstance(filter_sector, (set, list)) and 'all' in filter_sector))
 
     if not sector_mapping:
         print("Error: No sector mapping found in config.")
         sys.exit(1)
+
+    # Validate all top-level configuration keywords
+    valid_config_keys = {
+        'outputs', 'filename_prepend', 'filename_append',
+        'filter_sector', 'skip_sector', 'sector_skip',
+        'filter_mode', 'costcy_file', 'filter_fips',
+        'filter_states', 'filter_counties', 'filter_grid',
+        'griddesc_path', 'filter_shp', 'input_shp', 'county_shp',
+        'filter_cols', 'filter_col', 'filtered_val', 'start_val',
+        'end_val', 'sector'
+    }
+    unrecognized_config_keys = set(config.keys()) - valid_config_keys
+    if unrecognized_config_keys:
+        warnings.warn(
+            f"Unrecognized keyword(s) in configuration file: {', '.join(sorted(unrecognized_config_keys))}. "
+            f"Expected: {', '.join(sorted(valid_config_keys))}"
+        )
+
+    # Pre-flight companion file dependency validation
+    if config.get('filter_grid'):
+        if not config.get('griddesc_path') or not os.path.isfile(config['griddesc_path']):
+            raise FileNotFoundError(f"filter_grid is set but griddesc_path is missing or not found: {config.get('griddesc_path')}")
+        if not config.get('county_shp') or not os.path.isfile(config['county_shp']):
+            raise FileNotFoundError(f"filter_grid is set but county_shp is missing or not found: {config.get('county_shp')}")
+
+    shp_check = config.get('filter_shp') or config.get('input_shp')
+    if shp_check:
+        if not config.get('county_shp') or not os.path.isfile(config['county_shp']):
+            raise FileNotFoundError(f"filter_shp/input_shp is set but county_shp is missing or not found: {config.get('county_shp')}")
 
     os.makedirs(outputs_root, exist_ok=True)
 
@@ -514,66 +602,110 @@ if __name__ == "__main__":
     use_states = config.get('filter_states') and len(config.get('filter_states')) > 0
     use_counties = config.get('filter_counties') and len(config.get('filter_counties')) > 0
     
-    if (use_states or use_counties or use_fips_expansion) and config.get('costcy_file'):
-        print(f"Loading COSTCY from {config['costcy_file']}...")
-        costcy_data = parse_costcy(config['costcy_file'])
-    elif (use_states or use_counties or use_fips_expansion) and not config.get('costcy_file'):
-        print("Warning: COSTCY file missing but required for State/County/Generic-FIPS filtering.")
+    if use_states or use_counties or use_fips_expansion:
+        costcy_path = config.get('costcy_file')
+        if not costcy_path or not os.path.isfile(costcy_path):
+            raise FileNotFoundError(f"COSTCY file missing or not found at '{costcy_path}', but required for State/County/Generic-FIPS filtering.")
+        print(f"Loading COSTCY from {costcy_path}...")
+        costcy_data = parse_costcy(costcy_path)
 
-    # 1. Direct FIPS Filter (with expansion)
+    # 1. Direct FIPS Filter (Follows COSTCY C-SS-CCC structure)
     fips_to_filter = []
     for f in raw_fips:
-        # Convert user-provided 6-digit FIPS to 12-digit format for internal use
-        f_12digit = f
-        if len(f) == 6 and f.isdigit():
-            # User provided 6-digit (SSCCC format, e.g., "08041" = state 08 + county 041)
-            # Convert to 12-digit integer format used by SMOKE: format the integer with I12.12
-            # Example: 08041 (int) → "000000008041" (12-digit string)
-            try:
-                fips_int = int(f)
-                f_12digit = f"{fips_int:012d}"
-            except ValueError:
-                pass  # Keep original if not convertible
-        
-        # Check for generic state FIPS (e.g. '053000' in 6-digit or '000000053000' in 12-digit)
-        # Generic FIPS ends with '000' and is used to select all counties in a state
-        if f_12digit.endswith('000') and costcy_data:
-            # Extract state code: for 12-digit "000000053000", state code is at positions 6-9
-            # The format is "0CCCSSCCC" where CCC=country(1)+expansion(5), SS=state, CCC=county
-            # For generic FIPS ending in 000, we want all counties in that state
-            state_code = f_12digit[6:9]  # Get state code (e.g., "053" from "000000053000")
-            state_prefix = f"000000{state_code}"  # Prefix to match all counties in state
-            expanded = [k for k in costcy_data['fips'].keys() if k.startswith(state_prefix)]
-            if expanded:
-                fips_to_filter.extend(expanded)
-                print(f"Expanded generic FIPS {f} to {len(expanded)} counties.")
+        f_str = str(f).strip()
+        if not f_str:
+            continue
+
+        if f_str.isdigit():
+            val_int = int(f_str)
+            if len(f_str) == 5:
+                # 5-digit US FIPS (SSCCC, implicit Country 0)
+                c_code, s_code, co_code = 0, val_int // 1000, val_int % 1000
+            elif len(f_str) == 6:
+                # 6-digit SMOKE FIPS (CSSCCC)
+                c_code, s_code, co_code = val_int // 100000, (val_int % 100000) // 1000, val_int % 1000
+            elif len(f_str) == 12:
+                # 12-digit SMOKE FIPS (COU*100000 + STA*1000 + CNY)
+                c_code, s_code, co_code = val_int // 100000, (val_int % 100000) // 1000, val_int % 1000
             else:
-                fips_to_filter.append(f_12digit)
-                print(f"Warning: Generic FIPS {f} found no matches in COSTCY.")
+                c_code, s_code, co_code = None, None, None
+
+            # Check for generic state FIPS in COSTCY (County == 0, e.g. '036000' or '36000')
+            if c_code is not None and co_code == 0 and costcy_data:
+                expanded = [
+                    e for e in costcy_data.get('entries', [])
+                    if e['country'] == c_code and e['state'] == s_code and e['county'] > 0
+                ]
+                if expanded:
+                    for e in expanded:
+                        fips_to_filter.extend([e['fips6'], e['fips12']])
+                        if e['fips5']:
+                            fips_to_filter.append(e['fips5'])
+                    print(f"Expanded generic FIPS {f} to {len(expanded)} counties in country {c_code}, state {s_code}.")
+                else:
+                    fips_to_filter.append(f_str)
+                    print(f"Warning: Generic FIPS {f} found no matching counties in COSTCY.")
+            elif c_code is not None:
+                # Specific county FIPS: populate canonical forms (6-digit, 12-digit, and 5-digit if US)
+                fips6 = f"{c_code}{s_code:02d}{co_code:03d}"
+                fips12 = f"{c_code * 100000 + s_code * 1000 + co_code:012d}"
+                fips_to_filter.extend([f_str, fips6, fips12])
+                if c_code == 0:
+                    fips_to_filter.append(f"{s_code:02d}{co_code:03d}")
+            else:
+                fips_to_filter.append(f_str)
         else:
-             fips_to_filter.append(f_12digit)
+            fips_to_filter.append(f_str)
 
     # 2. State Filter (Lookup in COSTCY)
     if config.get('filter_states') and costcy_data:
         states = config.get('filter_states')
         if not isinstance(states, list): states = [states]
         for st in states:
-            fips_list = costcy_data['states'].get(st.upper())
-            if fips_list:
-                fips_to_filter.extend(fips_list)
+            entries = costcy_data['states'].get(st.upper(), [])
+            if entries:
+                for e in entries:
+                    fips_to_filter.extend([e['fips6'], e['fips12']])
+                    if e['fips5']:
+                        fips_to_filter.append(e['fips5'])
             else:
                 print(f"Warning: State '{st}' not found in COSTCY.")
 
-    # 3. County Name Filter (Lookup in COSTCY)
+    # 3. County Name Filter (Strictly Enforces 'ST:County Name' Format)
     if config.get('filter_counties') and costcy_data:
         counties = config.get('filter_counties')
         if not isinstance(counties, list): counties = [counties]
         for co in counties:
-            fips = costcy_data['counties'].get(co.lower())
-            if fips:
-                fips_to_filter.append(fips)
+            co_str = str(co).strip()
+            if not co_str:
+                continue
+
+            # Strict check: Reject numeric FIPS codes
+            if co_str.isdigit():
+                print(f"Error in filter_counties: '{co_str}' is a numeric FIPS code. "
+                      f"'filter_counties' strictly accepts county names in 'ST:County Name' format "
+                      f"(e.g., 'NY:Queens Co'). Please move numeric FIPS codes to 'filter_fips'.")
+                continue
+
+            # Strict check: Require 'ST:Name' format
+            if ':' not in co_str:
+                print(f"Error in filter_counties: '{co_str}' does not match 'ST:County Name' format "
+                      f"(e.g., 'NY:Queens Co').")
+                continue
+
+            st_part, name_part = [p.strip() for p in co_str.split(':', 1)]
+            if len(st_part) != 2 or not st_part.isalpha() or not name_part:
+                print(f"Error in filter_counties: '{co_str}' must have a valid 2-letter state abbreviation "
+                      f"(e.g., 'NY:Queens Co').")
+                continue
+
+            entry = costcy_data['counties'].get(co_str.lower())
+            if entry:
+                fips_to_filter.extend([entry['fips6'], entry['fips12']])
+                if entry['fips5']:
+                    fips_to_filter.append(entry['fips5'])
             else:
-                print(f"Warning: County '{co}' not found in COSTCY (use 'ST:Name' format).")
+                print(f"Warning: County '{co}' not found in COSTCY.")
 
     if fips_to_filter:
         active_filters.append({
@@ -589,24 +721,25 @@ if __name__ == "__main__":
         print(f"Creating grid domain for {config['filter_grid']}...")
         grid_gdf = create_domain_gdf(config['griddesc_path'], config['filter_grid'])
         counties_spatial = get_intersecting_counties(grid_gdf, config['county_shp'])
-        # Convert county codes to 12-digit format if needed
-        counties_spatial_12digit = []
+        counties_spatial_raw = set()
+        counties_spatial_all = set()
         for county_code in counties_spatial:
-            if len(county_code) == 5 and county_code.isdigit():
-                # 5-digit FIPS: convert to 12-digit
+            counties_spatial_raw.add(county_code)
+            counties_spatial_all.add(county_code)
+            if county_code.isdigit() and 1 <= len(county_code) <= 6:
                 fips_int = int(county_code)
-                counties_spatial_12digit.append(f"{fips_int:012d}")
-            else:
-                # Use as-is (already 12-digit or other format)
-                counties_spatial_12digit.append(county_code)
-        active_filters.append({'col_name': 'region_cd', 'vals': set(counties_spatial_12digit), 'range': None, 'is_exclusion': is_exclusion})
-        print(f"Added grid filter with {len(counties_spatial_12digit)} counties.")
+                counties_spatial_all.add(f"{fips_int:012d}")
+                counties_spatial_all.add(f"{fips_int:05d}")
+                counties_spatial_all.add(f"{fips_int:06d}")
+        active_filters.append({'col_name': 'region_cd', 'vals': counties_spatial_all, 'range': None, 'is_exclusion': is_exclusion})
+        print(f"Added grid filter with {len(counties_spatial_raw)} counties.")
 
     # 5. Shapefile Filter (GIS) — supports single path or list of paths
-    raw_shp = config.get('filter_shp')
+    raw_shp = config.get('filter_shp') or config.get('input_shp')
     if raw_shp:
         shp_paths = raw_shp if isinstance(raw_shp, list) else [raw_shp]
         shp_paths = [p for p in shp_paths if p]  # drop blank list entries
+        counties_spatial_raw = set()
         counties_spatial_all = set()
         for shp_path in shp_paths:
             shp_path = shp_path.strip() if isinstance(shp_path, str) else shp_path
@@ -619,14 +752,16 @@ if __name__ == "__main__":
             gis_gdf = gpd.read_file(shp_path)
             counties_spatial = get_intersecting_counties(gis_gdf, config['county_shp'])
             for county_code in counties_spatial:
-                if len(county_code) == 5 and county_code.isdigit():
+                counties_spatial_raw.add(county_code)
+                counties_spatial_all.add(county_code)
+                if county_code.isdigit() and 1 <= len(county_code) <= 6:
                     fips_int = int(county_code)
                     counties_spatial_all.add(f"{fips_int:012d}")
-                else:
-                    counties_spatial_all.add(county_code)
+                    counties_spatial_all.add(f"{fips_int:05d}")
+                    counties_spatial_all.add(f"{fips_int:06d}")
         if counties_spatial_all:
             active_filters.append({'col_name': 'region_cd', 'vals': counties_spatial_all, 'range': None, 'is_exclusion': is_exclusion})
-            print(f"Added shapefile filter with {len(counties_spatial_all)} counties (from {len(shp_paths)} shapefile(s)).")
+            print(f"Added shapefile filter with {len(counties_spatial_raw)} counties (from {len(shp_paths)} shapefile(s)).")
 
     # 6. Column filters (Supports multiple columns and per-filter modes)
     col_filters = config.get('filter_cols', [])
@@ -645,12 +780,25 @@ if __name__ == "__main__":
 
     for fc in col_filters:
         if not isinstance(fc, dict): continue
+        recognized_keys = {'col_name', 'filtered_val', 'start_val', 'end_val', 'filter_mode'}
+        unrecognized = set(fc.keys()) - recognized_keys
+        if unrecognized:
+            warnings.warn(
+                f"Unrecognized keyword(s) in filter_cols: {', '.join(sorted(unrecognized))}. "
+                f"Expected: {', '.join(sorted(recognized_keys))}"
+            )
+
         cname = fc.get('col_name')
         if not cname: continue
         
         vals = fc.get('filtered_val')
         if vals and not isinstance(vals, list): vals = [vals]
         
+        has_range = (fc.get('start_val') is not None or fc.get('end_val') is not None)
+        if not vals and not has_range:
+            print(f"Warning: Column filter '{cname}' has no values or range specified. Skipping.")
+            continue
+
         # Determine mode for this specific filter (prioritize local 'filter_mode')
         local_mode = fc.get('filter_mode')
         if local_mode:
@@ -668,7 +816,7 @@ if __name__ == "__main__":
 
     # Processing Loop
     for sector, fnames in sector_mapping.items():
-        if filter_sector != 'all' and sector not in filter_sector:
+        if not is_all_sectors and sector not in filter_sector:
             continue
             
         if sector in skip_sectors:
@@ -679,6 +827,7 @@ if __name__ == "__main__":
         os.makedirs(sector_output, exist_ok=True)
         sector_success, files_processed = True, 0
         n_files = len(fnames)
+        used_out_names = set()
         for i, fname in enumerate(fnames):
             ff10_path = fname
             
@@ -706,6 +855,9 @@ if __name__ == "__main__":
                     out_name = f"{prepend}{append}{suffix}{ext}"
                 else:
                     out_name = f"{base}{append}{ext}"
+                    if out_name in used_out_names:
+                        out_name = f"{base}{append}_{i+1}{ext}"
+                used_out_names.add(out_name)
                     
                 outfile = os.path.join(sector_output, out_name)
                 print(f"Processing {ff10_path} -> {outfile}")

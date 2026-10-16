@@ -1,0 +1,53 @@
+# --- Path Settings ---
+outputs: /home/cmas/smkextract/outputs/NYC
+
+# --- Filename Construction Logic ---
+# Final Name = [BaseName] + [filename_append] + [.extension]
+# 1. If filename_prepend is EMPTY:   BaseName = Original filename (e.g. 'rail_data')
+# 2. If filename_prepend is SET:     BaseName = filename_prepend value (e.g. 'v2')
+filename_prepend: # String to replace the base filename. If empty, uses original filename.
+filename_append:  # String to append to the end of the base filename.
+
+# --- Process Control ---
+filter_sector: all # Use 'all' to process all sectors defined below
+skip_sector:
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# !!! GLOBAL FILTER MODE SETTING                                                            !!!
+# !!! This applies to ALL filter types below (FIPS, States, Counties, Grid, GIS, Column)    !!!
+# !!! - extraction: Keep ONLY records that match the criteria                               !!!
+# !!! - exclusion:  Remove records that match the criteria (keep everything else)           !!!
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+filter_mode: extraction
+
+# --- FIPS & Geographic Filters (COSTCY based) ---
+costcy_file: /home/cmas/training/ge_dat/costcy_for_2017platform_20dec2023_v8.txt # Path to SMOKE COSTCY file for lookups
+filter_fips: [] # List of 6-digit FIPS codes (e.g., '001003') to include/exclude
+filter_states: [] # List of state abbreviations (e.g., 'AL', 'NY') to include/exclude (requires costcy_file)
+filter_counties: [] # List of counties as 'ST:County Name' (e.g., 'AL:Autauga Co') to include/exclude (requires costcy_file)
+
+# --- Spatial Filter (Grid Domain) ---
+filter_grid: #12LISTOS # Grid ID from griddesc file to use for spatial domain filtering (requires county_shp)
+griddesc_path: /home/cmas/training/ge_dat/gridding/griddesc_lambertonly_18jan2019_v7.txt # Absolute path to the grid description file
+
+# --- Shapefile Filter (GIS) ---
+filter_shp: /home/cmas/smkextract/example_smoke_training/inputs/NYC/nybb.shp # Path to a custom shapefile (GIS) to filter by spatial intersection (requires county_shp)
+
+# --- Reference Data for Spatial Filters ---
+county_shp: /home/cmas/smkextract/example_smoke_training/inputs/cb_2020_us_county_500k_asc2020.gpkg # Path to reference county shapefile (bridge for both Grid and Shapefile filters)
+
+# --- Generalized Column Filtering ---
+filter_cols: 
+  - col_name: # Name of an additional column to filter on (e.g., 'scc', 'poll')
+    filtered_val:  
+    filter_mode:
+
+# --- Sectors & Files Mapping ---
+sector:
+  nonpt:
+  - /home/cmas/training/2022he_cb6_22m/inputs/nonpt/2022hc_proj_2020NEI_NONPOINT_20230222_05aug2025_nf_v4.csv
+  ptegu:
+  - /home/cmas/training/2022he_cb6_22m/inputs/ptegu/egu_2022_POINT_20250812_multifix_2022cems_14aug2025_v0.csv
+  ptnonipm:
+  - /home/cmas/training/2022he_cb6_22m/inputs/ptnonipm/nonegu_norail_2022_POINT_20250812_14aug2025_nf_v1.csv
+  - /home/cmas/training/2022he_cb6_22m/inputs/ptnonipm/railyards_2022_POINT_20250812_14aug2025_v0.csv
